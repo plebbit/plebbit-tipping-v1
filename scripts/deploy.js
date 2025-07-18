@@ -1,35 +1,18 @@
-const { ethers } = require("hardhat");
-
-async function main() {
-  // Deploy with initial parameters
-  const minimumTipAmount = ethers.parseEther("0.001"); // 0.001 ETH minimum
-  const feePercent = 5; // 5% fee
-
-  console.log("Deploying PlebbitTippingV1...");
+// deploy/01_deploy_plebbit.js
+module.exports = async ({ getNamedAccounts, deployments, ethers }) => {
+    const { deploy } = deployments;
+    const { deployer } = await getNamedAccounts();
   
-  const PlebbitTippingV1 = await ethers.getContractFactory("PlebbitTippingV1");
-  const plebbitTipping = await PlebbitTippingV1.deploy(minimumTipAmount, feePercent);
+    const minimumTipAmount = ethers.parseEther("0.001");
+    const feePercent = 5;
   
-  await plebbitTipping.waitForDeployment();
+    // Use a salt (must be 32 bytes, e.g., a hash)
+    const salt = ethers.keccak256(ethers.toUtf8Bytes("plebbit-v1-salt"));
   
-  console.log("PlebbitTippingV1 deployed to:", await plebbitTipping.getAddress());
-  console.log("Minimum tip amount:", ethers.formatEther(minimumTipAmount), "ETH");
-  console.log("Fee percent:", feePercent, "%");
-  
-  // Verify deployment
-  const deployedMinimumTipAmount = await plebbitTipping.minimumTipAmount();
-  const deployedFeePercent = await plebbitTipping.feePercent();
-  
-  console.log("\nVerification:");
-  console.log("Deployed minimum tip amount:", ethers.formatEther(deployedMinimumTipAmount), "ETH");
-  console.log("Deployed fee percent:", deployedFeePercent.toString(), "%");
-  
-  return plebbitTipping;
-}
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+    await deploy("PlebbitTippingV1", {
+      from: deployer,
+      args: [minimumTipAmount, feePercent],
+      deterministicDeployment: salt,
+      log: true,
+    });
+  };
