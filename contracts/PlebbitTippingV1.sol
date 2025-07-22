@@ -16,7 +16,7 @@ contract PlebbitTippingV1 is AccessControl {
      * @param sender The address of the tip sender.
      * @param senderCommentCid Optional comment CID from the sender (0x0 if none).
      */
-    struct Tip {
+    struct TipData {
         uint96 amount;
         address feeRecipient;
         address sender;
@@ -24,7 +24,7 @@ contract PlebbitTippingV1 is AccessControl {
     }
 
     /// @notice Maps (recipientCommentCid, feeRecipient) to an array of tips.
-    mapping(bytes32 => Tip[]) public tips;
+    mapping(bytes32 => TipData[]) public tips;
 
     /// @notice Maps (recipientCommentCid, feeRecipient) to the total amount tipped.
     mapping(bytes32 => uint256) public tipsTotalAmounts;
@@ -50,7 +50,7 @@ contract PlebbitTippingV1 is AccessControl {
      * @param recipientCommentCid The comment CID of the recipient.
      * @param senderCommentCid The comment CID of the sender (0x0 if none).
      */
-    event TipEvent(
+    event Tip(
         address indexed sender,
         address indexed recipient,
         uint256 amount,
@@ -99,14 +99,14 @@ contract PlebbitTippingV1 is AccessControl {
 
         // Track tip by recipient comment and fee recipient
         bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipient));
-        tips[tipKey].push(Tip(uint96(amount), feeRecipient, msg.sender, senderCommentCid));
+        tips[tipKey].push(TipData(uint96(amount), feeRecipient, msg.sender, senderCommentCid));
         tipsTotalAmounts[tipKey] += amount;
 
         // Track total tipped by sender for this combination
         bytes32 senderTipKey = keccak256(abi.encode(senderCommentCid, msg.sender, recipientCommentCid, feeRecipient));
         senderTipsTotalAmounts[senderTipKey] += amount;
 
-        emit TipEvent(msg.sender, recipient, amount, feeRecipient, recipientCommentCid, senderCommentCid);
+        emit Tip(msg.sender, recipient, amount, feeRecipient, recipientCommentCid, senderCommentCid);
     }
 
     /**
@@ -207,7 +207,7 @@ contract PlebbitTippingV1 is AccessControl {
         
         for (uint256 i = 0; i < feeRecipients.length && resultIndex < maxResults; i++) {
             bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));
-            Tip[] storage tipArray = tips[tipKey];
+            TipData[] storage tipArray = tips[tipKey];
             
             for (uint256 j = 0; j < tipArray.length && resultIndex < maxResults; j++) {
                 if (currentIndex >= offset) {
@@ -222,19 +222,19 @@ contract PlebbitTippingV1 is AccessControl {
     }
 
     /**
-     * @notice Get the Tip structs for a recipient comment and fee recipients, with pagination.
+     * @notice Get the TipData structs for a recipient comment and fee recipients, with pagination.
      * @param recipientCommentCid The comment CID of the recipient.
      * @param feeRecipients The list of fee recipient addresses.
      * @param offset The starting index for pagination.
      * @param limit The maximum number of results to return.
-     * @return result Array of Tip structs.
+     * @return result Array of TipData structs.
      */
     function getTips(
         bytes32 recipientCommentCid,
         address[] calldata feeRecipients,
         uint256 offset,
         uint256 limit
-    ) external view returns (Tip[] memory) {
+    ) external view returns (TipData[] memory) {
         uint256 totalTips = 0;
         
         // Count total tips across all feeRecipients
@@ -244,7 +244,7 @@ contract PlebbitTippingV1 is AccessControl {
         }
         
         if (offset >= totalTips) {
-            return new Tip[](0);
+            return new TipData[](0);
         }
         
         uint256 maxResults = limit;
@@ -252,13 +252,13 @@ contract PlebbitTippingV1 is AccessControl {
             maxResults = totalTips - offset;
         }
         
-        Tip[] memory result = new Tip[](maxResults);
+        TipData[] memory result = new TipData[](maxResults);
         uint256 currentIndex = 0;
         uint256 resultIndex = 0;
         
         for (uint256 i = 0; i < feeRecipients.length && resultIndex < maxResults; i++) {
             bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));
-            Tip[] storage tipArray = tips[tipKey];
+            TipData[] storage tipArray = tips[tipKey];
             
             for (uint256 j = 0; j < tipArray.length && resultIndex < maxResults; j++) {
                 if (currentIndex >= offset) {

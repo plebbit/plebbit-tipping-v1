@@ -1,3 +1,11 @@
+const semver = require('semver');
+const minVersion = '20.19.0';
+
+if (!semver.satisfies(process.version, '>=' + minVersion)) {
+  console.error(`Node.js ${minVersion} or higher is required. Current version: ${process.version}`);
+  process.exit(1);
+}
+
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
@@ -15,6 +23,9 @@ describe("PlebbitTippingV1", function () {
         plebbitTipping = await PlebbitTippingV1.deploy(initialMinimumTipAmount, initialFeePercent);
         await plebbitTipping.waitForDeployment();
         await plebbitTipping.grantRole(await plebbitTipping.MODERATOR_ROLE(), mod.address);
+
+        // Log the deployed address
+        console.log("Test deployed PlebbitTippingV1 at:", plebbitTipping.target || plebbitTipping.address);
     });
 
     it("Admin can set roles, mods can change mod functions, public can't", async function () {
@@ -36,7 +47,7 @@ describe("PlebbitTippingV1", function () {
             ethers.ZeroHash, 
             ethers.ZeroHash, 
             { value: toWei("0.01") })
-        ).to.emit(plebbitTipping, "TipEvent");
+        ).to.emit(plebbitTipping, "Tip");
 
         const balanceMod = await ethers.provider.getBalance(mod.address);
         const balanceUser2 = await ethers.provider.getBalance(user2.address);
@@ -184,7 +195,7 @@ describe("PlebbitTippingV1", function () {
                 recipientCommentCid,
                 { value: toWei("0.01") }
             )
-        ).to.emit(plebbitTipping, "TipEvent")
+        ).to.emit(plebbitTipping, "Tip")
         .withArgs(
             user1.address,
             user2.address,
