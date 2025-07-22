@@ -7,7 +7,8 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "deploy": "npx hardhat run scripts/deploy.js",
-    "deploy:localhost": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:localhost": "npx hardhat deploy --network localhost",
+    "deploy:all": "node scripts/deploy-all.js",
     "node": "npx hardhat node"
   },
   "keywords": [],
@@ -18,6 +19,14 @@
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@openzeppelin/contracts": "^5.4.0",
     "hardhat": "^2.26.0",
-    "hardhat-deploy": "^1.0.4"
+    "hardhat-deploy": "^1.0.4",
+    "semver": "^7.7.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "wait-on": "^8.0.3"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   }
 }

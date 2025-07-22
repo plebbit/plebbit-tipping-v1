@@ -57,6 +57,26 @@ For general deployment:
 npm run deploy
 ```
 
+#### Running Tests on a Mainnet Fork (Ethereum)
+
+You can run tests against a fork of the current Ethereum mainnet using Hardhat.  
+You'll need an RPC URL from a provider like Alchemy or Infura.
+
+1. Set your mainnet RPC URL as an environment variable:
+   ```bash
+   export MAINNET_RPC_URL="https://eth-mainnet.g.alchemy.com/v2/your-api-key"
+   ```
+
+2. Start a Hardhat node forked from mainnet:
+   ```bash
+   npx hardhat node --fork $MAINNET_RPC_URL
+   ```
+
+3. In a new terminal, run the tests:
+   ```bash
+   npm test
+   ```
+
 ## Contract API
 
 ### Main Functions

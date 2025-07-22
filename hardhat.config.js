@@ -1,9 +1,9 @@
 require("@nomicfoundation/hardhat-toolbox");
-
+require('hardhat-deploy');
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: "0.8.28",
+    version: "0.8.20", // <-- set to at least 0.8.20
     settings: {
       optimizer: {
         enabled: true,
@@ -18,6 +18,11 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
+    },
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0, // here 0 means the first account by default
     },
   },
   deterministicDeployment: (network) => {
