@@ -10,8 +10,8 @@
     "deploy:localhost": "npx hardhat deploy --network localhost",
     "deploy:all": "node scripts/deploy-all.js",
     "node": "npx hardhat node",
-    "verify:sepolia": "npx hardhat verify --network sepolia <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>",
-    "verify:amoy": "npx hardhat verify --network amoy <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>"
+    "verify:sepolia": "npx hardhat verify --network sepolia 0x21525564965e753b737f551ec81951680c5516F1 1000000000000000 5",
+    "verify:amoy": "npx hardhat verify --network amoy 0x21525564965e753b737f551ec81951680c5516F1 1000000000000000 5"
   },
   "keywords": [],
   "author": "",
