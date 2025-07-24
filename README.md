@@ -77,6 +77,28 @@ You'll need an RPC URL from a provider like Alchemy or Infura.
    npm test
    ```
 
+#### Deploying on Testnets
+   ```bash
+   npx hardhat deploy --network sepolia
+   ```
+   ```bash
+   npx hardhat deploy --network amoy
+   ```
+
+After deploying to a testnet, you can verify your contract on the relevant block explorer (Etherscan for Sepolia, Polygonscan for Amoy) using the following scripts:
+
+```
+npm run verify:sepolia -- <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
+```
+
+or
+
+```
+npm run verify:amoy -- <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
+```
+
+Replace `<DEPLOYED_CONTRACT_ADDRESS>` with your contract's address and `<CONSTRUCTOR_ARGS>` with any constructor arguments (if any).
+
 ## Contract API
 
 ### Main Functions

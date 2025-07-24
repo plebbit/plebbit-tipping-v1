@@ -1,5 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
 require('hardhat-deploy');
+require('dotenv').config();
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
@@ -19,6 +21,17 @@ module.exports = {
     localhost: {
       url: "http://127.0.0.1:8545",
     },
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID", // Set this in your .env
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY.startsWith('0x') ? process.env.PRIVATE_KEY : `0x${process.env.PRIVATE_KEY}`] : [],
+      chainId: 11155111,
+    },
+    amoy: {
+      url: process.env.AMOY_RPC_URL || "https://rpc-amoy.polygon.technology", // Set this in your .env
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY.startsWith('0x') ? process.env.PRIVATE_KEY : `0x${process.env.PRIVATE_KEY}`] : [],
+      chainId: 80002,
+      gasPrice: 50_000_000_000, // 50 gwei
+    },
   },
   namedAccounts: {
     deployer: {
@@ -33,5 +46,11 @@ module.exports = {
       funding: "10000000000000000",
       signedTx: "0x00",
     };
+  },
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_API_KEY || "YOUR_ETHERSCAN_API_KEY",
+      polygonAmoy: process.env.POLYGONSCAN_API_KEY || "YOUR_POLYGONSCAN_API_KEY",
+    },
   },
 };

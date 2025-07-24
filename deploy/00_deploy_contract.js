@@ -10,6 +10,10 @@ module.exports = async function (hre) {
   // Use a salt (must be 32 bytes, e.g., a hash)
   const salt = ethers.keccak256(ethers.toUtf8Bytes("plebbit-v1-salt"));
 
+  // Print deployer balance before deployment
+  const balanceBefore = await ethers.provider.getBalance(deployer);
+  console.log("Deployer balance before:", ethers.formatEther(balanceBefore), "MATIC");
+
   const deployment = await deploy("PlebbitTippingV1", {
     from: deployer,
     args: [minimumTipAmount, feePercent],
@@ -21,6 +25,9 @@ module.exports = async function (hre) {
   } else {
     console.log("PlebbitTippingV1 already deployed at:", deployment.address);
   }
+  // Print deployer balance after deployment
+  const balanceAfter = await ethers.provider.getBalance(deployer);
+  console.log("Deployer balance after:", ethers.formatEther(balanceAfter), "MATIC");
   // Print the network name
   console.log("Deployment network:", hre.network.name);
 };

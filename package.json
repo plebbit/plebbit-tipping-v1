@@ -9,7 +9,9 @@
     "deploy": "npx hardhat run scripts/deploy.js",
     "deploy:localhost": "npx hardhat deploy --network localhost",
     "deploy:all": "node scripts/deploy-all.js",
-    "node": "npx hardhat node"
+    "node": "npx hardhat node",
+    "verify:sepolia": "npx hardhat verify --network sepolia <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>",
+    "verify:amoy": "npx hardhat verify --network amoy <DEPLOYED_CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>"
   },
   "keywords": [],
   "author": "",
