@@ -1,4 +1,8 @@
 // deploy/01_deploy_plebbit.js
+require('dotenv').config();
+const admin = process.env.ADMIN_ADDRESS;
+if (!admin) throw new Error("ADMIN_ADDRESS not set in .env");
+
 module.exports = async function (hre) {
   const { getNamedAccounts, deployments, ethers } = hre;
   const { deploy } = deployments;
@@ -8,7 +12,7 @@ module.exports = async function (hre) {
   const feePercent = 5;
 
   // Use a salt (must be 32 bytes, e.g., a hash)
-  const salt = ethers.keccak256(ethers.toUtf8Bytes("plebbit-v1-salt"));
+  const salt = ethers.keccak256(ethers.toUtf8Bytes("plebbit-v1-salt-2"));
 
   // Print deployer balance before deployment
   const balanceBefore = await ethers.provider.getBalance(deployer);
@@ -16,7 +20,7 @@ module.exports = async function (hre) {
 
   const deployment = await deploy("PlebbitTippingV1", {
     from: deployer,
-    args: [minimumTipAmount, feePercent],
+    args: [admin, minimumTipAmount, feePercent], // <-- admin is now the first argument
     deterministicDeployment: salt,
     log: true,
   });

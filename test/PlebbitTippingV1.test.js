@@ -20,7 +20,7 @@ describe("PlebbitTippingV1", function () {
     beforeEach(async function () {
         [admin, mod, user1, user2, ...addrs] = await ethers.getSigners();
         PlebbitTippingV1 = await ethers.getContractFactory("PlebbitTippingV1");
-        plebbitTipping = await PlebbitTippingV1.deploy(initialMinimumTipAmount, initialFeePercent);
+        plebbitTipping = await PlebbitTippingV1.deploy(admin.address, initialMinimumTipAmount, initialFeePercent);
         await plebbitTipping.waitForDeployment();
         await plebbitTipping.grantRole(await plebbitTipping.MODERATOR_ROLE(), mod.address);
 

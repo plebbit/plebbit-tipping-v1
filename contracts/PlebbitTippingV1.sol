@@ -61,13 +61,14 @@ contract PlebbitTippingV1 is AccessControl {
 
     /**
      * @notice Contract constructor.
+     * @param _admin The address to be granted DEFAULT_ADMIN_ROLE.
      * @param _minimumTipAmount The minimum tip amount (in wei).
      * @param _feePercent The fee percentage (between 1 and 20).
      */
-    constructor(uint256 _minimumTipAmount, uint256 _feePercent) {
+    constructor(address _admin, uint256 _minimumTipAmount, uint256 _feePercent) {
         minimumTipAmount = _minimumTipAmount;
         feePercent = _feePercent;
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
 
     /**
