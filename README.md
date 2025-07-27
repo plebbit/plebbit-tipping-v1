@@ -4,10 +4,11 @@ This is a Solidity smart contract project using Hardhat for a decentralized tipp
 
 ## Deployed Contracts
 
-| Network  | Contract Address                                                                 |
-|----------|----------------------------------------------------------------------------------|
-| Sepolia  | [0x49753cB4ff375e04D2BC2A64971F60cD1a091381](https://sepolia.etherscan.io/address/0x49753cB4ff375e04D2BC2A64971F60cD1a091381#code) |
-| Amoy     | [0x49753cB4ff375e04D2BC2A64971F60cD1a091381](https://amoy.polygonscan.com/address/0x49753cB4ff375e04D2BC2A64971F60cD1a091381#code) |
+| Network      | Contract Address                                                                 |
+|--------------|----------------------------------------------------------------------------------|
+| Sepolia      | [0x49753cB4ff375e04D2BC2A64971F60cD1a091381](https://sepolia.etherscan.io/address/0x49753cB4ff375e04D2BC2A64971F60cD1a091381#code) |
+| Amoy         | [0x49753cB4ff375e04D2BC2A64971F60cD1a091381](https://amoy.polygonscan.com/address/0x49753cB4ff375e04D2BC2A64971F60cD1a091381#code) |
+| Base Sepolia | [0x49753cB4ff375e04D2BC2A64971F60cD1a091381](https://amoy.polygonscan.com/address/0x49753cB4ff375e04D2BC2A64971F60cD1a091381#code) | 
 
 > **Note:** The Amoy deployment failed due to insufficient funds. Please fund the deployer and redeploy to obtain the contract address.
 
@@ -92,6 +93,9 @@ You'll need an RPC URL from a provider like Alchemy or Infura.
    ```
    ```bash
    npx hardhat deploy --network amoy
+   ```
+   ```bash
+   npx hardhat deploy --network baseSepolia
    ```
 
 After deploying to a testnet, you can verify your contract on the relevant block explorer (Etherscan for Sepolia, Polygonscan for Amoy) using the following scripts:
