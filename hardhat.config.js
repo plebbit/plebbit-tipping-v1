@@ -32,6 +32,12 @@ module.exports = {
       chainId: 80002,
       gasPrice: 50_000_000_000, // 50 gwei
     },
+    baseSepolia: {
+      url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org", // Set this in your .env
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY.startsWith('0x') ? process.env.PRIVATE_KEY : `0x${process.env.PRIVATE_KEY}`] : [],
+      chainId: 84532,
+      gasPrice: 1000000000, // 1 gwei
+    },
   },
   namedAccounts: {
     deployer: {
@@ -48,9 +54,6 @@ module.exports = {
     };
   },
   etherscan: {
-    apiKey: {
-      sepolia: process.env.ETHERSCAN_API_KEY || "YOUR_ETHERSCAN_API_KEY",
-      polygonAmoy: process.env.POLYGONSCAN_API_KEY || "YOUR_POLYGONSCAN_API_KEY",
-    },
+    apiKey: process.env.ETHERSCAN_API_KEY || "YOUR_ETHERSCAN_API_KEY",
   },
 };

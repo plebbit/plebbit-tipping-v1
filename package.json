@@ -11,7 +11,8 @@
     "deploy:all": "node scripts/deploy-all.js",
     "node": "npx hardhat node",
     "verify:sepolia": "npx hardhat verify --network sepolia 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5",
-    "verify:amoy": "npx hardhat verify --network amoy 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5"
+    "verify:amoy": "npx hardhat verify --network amoy 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5",
+    "verify:baseSepolia": "npx hardhat verify --network baseSepolia 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5"
   },
   "keywords": [],
   "author": "",
