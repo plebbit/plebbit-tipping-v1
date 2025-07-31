@@ -17,6 +17,13 @@ module.exports = {
     hardhat: {
       chainId: 1337,
       allowUnlimitedContractSize: true,
+      // Forking configuration (uncomment and set MAINNET_RPC_URL in .env to use)
+      ...(process.env.MAINNET_RPC_URL ? {
+        forking: {
+          url: process.env.MAINNET_RPC_URL,
+          blockNumber: process.env.FORK_BLOCK_NUMBER ? parseInt(process.env.FORK_BLOCK_NUMBER) : undefined
+        }
+      } : {}),
     },
     localhost: {
       url: "http://127.0.0.1:8545",

@@ -1,34 +1,35 @@
 {
   "name": "plebbit-tipping-v1",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Plebbit Tipping v1 - Decentralized tipping system with smart contracts and JavaScript API",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "js-api"
+  ],
   "scripts": {
-    "test": "npx hardhat test",
-    "compile": "npx hardhat compile",
-    "deploy": "npx hardhat run scripts/deploy.js",
-    "deploy:localhost": "npx hardhat deploy --network localhost",
-    "deploy:all": "node scripts/deploy-all.js",
-    "node": "npx hardhat node",
-    "verify:sepolia": "npx hardhat verify --network sepolia 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5",
-    "verify:amoy": "npx hardhat verify --network amoy 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5",
-    "verify:baseSepolia": "npx hardhat verify --network baseSepolia 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5"
+    "build:contracts": "cd contracts && npm run compile",
+    "build:js-api": "cd js-api && npm run build",
+    "build": "npm run build:contracts && npm run build:js-api",
+    "dev": "npm run build:contracts && cd js-api && npm run dev",
+    "test:contracts": "cd contracts && npm test",
+    "test:js-api": "cd js-api && npm test",
+    "test": "npm run test:contracts && npm run test:js-api",
+    "deploy": "cd contracts && npm run deploy",
+    "deploy:localhost": "cd contracts && npm run deploy:localhost",
+    "deploy:all": "cd contracts && npm run deploy:all",
+    "node": "cd contracts && npm run node",
+    "node:fork": "cd contracts && npm run node:fork",
+    "test:fork": "cd contracts && npm run test:fork",
+    "verify:sepolia": "cd contracts && npm run verify:sepolia",
+    "verify:amoy": "cd contracts && npm run verify:amoy",
+    "verify:baseSepolia": "cd contracts && npm run verify:baseSepolia",
+    "install:all": "cd contracts && npm install && cd ../js-api && npm install",
+    "clean": "rm -rf contracts/node_modules js-api/node_modules contracts/dist js-api/dist contracts/artifacts contracts/cache"
   },
-  "keywords": [],
+  "keywords": ["plebbit", "tipping", "ethereum", "blockchain", "solidity", "typescript"],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "@openzeppelin/contracts": "^5.4.0",
-    "hardhat": "^2.26.0",
-    "hardhat-deploy": "^1.0.4",
-    "semver": "^7.7.2"
-  },
-  "dependencies": {
-    "dotenv": "^17.2.0",
-    "wait-on": "^8.0.3"
-  },
+  "license": "MIT",
   "engines": {
     "node": ">=20.19.0"
   }

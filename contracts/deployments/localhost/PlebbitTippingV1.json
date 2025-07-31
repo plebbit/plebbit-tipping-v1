@@ -1,0 +1,1186 @@
+{
+  "address": "0x49753cB4ff375e04D2BC2A64971F60cD1a091381",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_minimumTipAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_feePercent",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "AccessControlBadConfirmation",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "neededRole",
+          "type": "bytes32"
+        }
+      ],
+      "name": "AccessControlUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "previousAdminRole",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "newAdminRole",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RoleAdminChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "RoleGranted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "RoleRevoked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "feeRecipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "recipientCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "senderCommentCid",
+          "type": "bytes32"
+        }
+      ],
+      "name": "Tip",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "DEFAULT_ADMIN_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MODERATOR_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "feePercent",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getRoleAdmin",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "senderCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "recipientCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeRecipients",
+          "type": "address[]"
+        }
+      ],
+      "name": "getSenderTipsTotalAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "senderCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "recipientCommentCids",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "address[][]",
+          "name": "feeRecipients",
+          "type": "address[][]"
+        }
+      ],
+      "name": "getSenderTipsTotalAmounts",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "senderCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "recipientCommentCids",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeRecipients",
+          "type": "address[]"
+        }
+      ],
+      "name": "getSenderTipsTotalAmountsSameFeeRecipients",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "recipientCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeRecipients",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "offset",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "limit",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTips",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint96",
+              "name": "amount",
+              "type": "uint96"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "senderCommentCid",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct PlebbitTippingV1.TipData[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "recipientCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeRecipients",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "offset",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "limit",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTipsAmounts",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "amounts",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "recipientCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeRecipients",
+          "type": "address[]"
+        }
+      ],
+      "name": "getTipsTotalAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "recipientCommentCids",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "address[][]",
+          "name": "feeRecipients",
+          "type": "address[][]"
+        }
+      ],
+      "name": "getTipsTotalAmounts",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "recipientCommentCids",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeRecipients",
+          "type": "address[]"
+        }
+      ],
+      "name": "getTipsTotalAmountsSameFeeRecipients",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "grantRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "hasRole",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumTipAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "callerConfirmation",
+          "type": "address"
+        }
+      ],
+      "name": "renounceRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "revokeRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "senderTipsTotalAmounts",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_feePercent",
+          "type": "uint256"
+        }
+      ],
+      "name": "setFeePercent",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_minimumTipAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMinimumTipAmount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "interfaceId",
+          "type": "bytes4"
+        }
+      ],
+      "name": "supportsInterface",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "feeRecipient",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "senderCommentCid",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "recipientCommentCid",
+          "type": "bytes32"
+        }
+      ],
+      "name": "tip",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "tips",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "amount",
+          "type": "uint96"
+        },
+        {
+          "internalType": "address",
+          "name": "feeRecipient",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "senderCommentCid",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "tipsTotalAmounts",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x3929e3934c53c8ce9a3084aaadb4e30979c970b00305d00e9920fef5929e6c11",
+  "receipt": {
+    "to": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+    "from": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "contractAddress": null,
+    "transactionIndex": 0,
+    "gasUsed": "1767113",
+    "logsBloom": "0x00000004000000001000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000020000000000000000000800000000000000000000000000000000000000200000000000000000000000000000000000001000000000000000000000000000000001000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000100000000000020000000000000000000000000000000200080000000002000000000000000000000",
+    "blockHash": "0x21f83e18094a54e09f6f9252b16f2b1b4e365c5fe18520815937d0fe0dc01799",
+    "transactionHash": "0x3929e3934c53c8ce9a3084aaadb4e30979c970b00305d00e9920fef5929e6c11",
+    "logs": [
+      {
+        "transactionIndex": 0,
+        "blockNumber": 23038603,
+        "transactionHash": "0x3929e3934c53c8ce9a3084aaadb4e30979c970b00305d00e9920fef5929e6c11",
+        "address": "0x49753cB4ff375e04D2BC2A64971F60cD1a091381",
+        "topics": [
+          "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000007cc17990fe944919aa6b91aa576cebf1e9454749",
+          "0x0000000000000000000000004e59b44847b379578588920ca78fbf26c0b4956c"
+        ],
+        "data": "0x",
+        "logIndex": 0,
+        "blockHash": "0x21f83e18094a54e09f6f9252b16f2b1b4e365c5fe18520815937d0fe0dc01799"
+      }
+    ],
+    "blockNumber": 23038603,
+    "cumulativeGasUsed": "1767113",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x7CC17990FE944919Aa6b91AA576CEBf1E9454749",
+    "1000000000000000",
+    5
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "d60b1c428bac3a361bb8710c2a0e8425",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_minimumTipAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_feePercent\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"feeRecipient\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"recipientCommentCid\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"}],\"name\":\"Tip\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MODERATOR_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feePercent\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"recipientCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address[]\",\"name\":\"feeRecipients\",\"type\":\"address[]\"}],\"name\":\"getSenderTipsTotalAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32[]\",\"name\":\"recipientCommentCids\",\"type\":\"bytes32[]\"},{\"internalType\":\"address[][]\",\"name\":\"feeRecipients\",\"type\":\"address[][]\"}],\"name\":\"getSenderTipsTotalAmounts\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32[]\",\"name\":\"recipientCommentCids\",\"type\":\"bytes32[]\"},{\"internalType\":\"address[]\",\"name\":\"feeRecipients\",\"type\":\"address[]\"}],\"name\":\"getSenderTipsTotalAmountsSameFeeRecipients\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"recipientCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address[]\",\"name\":\"feeRecipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"offset\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"getTips\",\"outputs\":[{\"components\":[{\"internalType\":\"uint96\",\"name\":\"amount\",\"type\":\"uint96\"},{\"internalType\":\"address\",\"name\":\"feeRecipient\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"}],\"internalType\":\"struct PlebbitTippingV1.TipData[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"recipientCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address[]\",\"name\":\"feeRecipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"offset\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"getTipsAmounts\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"recipientCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"address[]\",\"name\":\"feeRecipients\",\"type\":\"address[]\"}],\"name\":\"getTipsTotalAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"recipientCommentCids\",\"type\":\"bytes32[]\"},{\"internalType\":\"address[][]\",\"name\":\"feeRecipients\",\"type\":\"address[][]\"}],\"name\":\"getTipsTotalAmounts\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"recipientCommentCids\",\"type\":\"bytes32[]\"},{\"internalType\":\"address[]\",\"name\":\"feeRecipients\",\"type\":\"address[]\"}],\"name\":\"getTipsTotalAmountsSameFeeRecipients\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minimumTipAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"senderTipsTotalAmounts\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_feePercent\",\"type\":\"uint256\"}],\"name\":\"setFeePercent\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_minimumTipAmount\",\"type\":\"uint256\"}],\"name\":\"setMinimumTipAmount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"feeRecipient\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"recipientCommentCid\",\"type\":\"bytes32\"}],\"name\":\"tip\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"tips\",\"outputs\":[{\"internalType\":\"uint96\",\"name\":\"amount\",\"type\":\"uint96\"},{\"internalType\":\"address\",\"name\":\"feeRecipient\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"senderCommentCid\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"tipsTotalAmounts\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Uses AccessControl for moderator/admin permissions.\",\"errors\":{\"AccessControlBadConfirmation()\":[{\"details\":\"The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\"}],\"AccessControlUnauthorizedAccount(address,bytes32)\":[{\"details\":\"The `account` is missing a role.\"}]},\"events\":{\"RoleAdminChanged(bytes32,bytes32,bytes32)\":{\"details\":\"Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted to signal this.\"},\"RoleGranted(bytes32,address,address)\":{\"details\":\"Emitted when `account` is granted `role`. `sender` is the account that originated the contract call. This account bears the admin role (for the granted role). Expected in cases where the role was granted using the internal {AccessControl-_grantRole}.\"},\"RoleRevoked(bytes32,address,address)\":{\"details\":\"Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)\"},\"Tip(address,address,uint256,address,bytes32,bytes32)\":{\"params\":{\"amount\":\"The total amount tipped.\",\"feeRecipient\":\"The address receiving the fee.\",\"recipient\":\"The address receiving the tip.\",\"recipientCommentCid\":\"The comment CID of the recipient.\",\"sender\":\"The address sending the tip.\",\"senderCommentCid\":\"The comment CID of the sender (0x0 if none).\"}}},\"kind\":\"dev\",\"methods\":{\"constructor\":{\"params\":{\"_admin\":\"The address to be granted DEFAULT_ADMIN_ROLE.\",\"_feePercent\":\"The fee percentage (between 1 and 20).\",\"_minimumTipAmount\":\"The minimum tip amount (in wei).\"}},\"getRoleAdmin(bytes32)\":{\"details\":\"Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}.\"},\"getSenderTipsTotalAmount(bytes32,address,bytes32,address[])\":{\"params\":{\"feeRecipients\":\"The list of fee recipient addresses.\",\"recipientCommentCid\":\"The comment CID of the recipient.\",\"sender\":\"The address of the tip sender.\",\"senderCommentCid\":\"The comment CID from the sender (0x0 if none).\"},\"returns\":{\"_0\":\"total The total amount tipped by the sender for these parameters.\"}},\"getSenderTipsTotalAmounts(bytes32,address,bytes32[],address[][])\":{\"params\":{\"feeRecipients\":\"Array of arrays of fee recipient addresses.\",\"recipientCommentCids\":\"Array of recipient comment CIDs.\",\"sender\":\"The address of the tip sender.\",\"senderCommentCid\":\"The comment CID from the sender (0x0 if none).\"},\"returns\":{\"_0\":\"totals Array of total amounts for each recipient comment.\"}},\"getSenderTipsTotalAmountsSameFeeRecipients(bytes32,address,bytes32[],address[])\":{\"params\":{\"feeRecipients\":\"Array of fee recipient addresses.\",\"recipientCommentCids\":\"Array of recipient comment CIDs.\",\"sender\":\"The address of the tip sender.\",\"senderCommentCid\":\"The comment CID from the sender (0x0 if none).\"},\"returns\":{\"_0\":\"totals Array of total amounts for each recipient comment.\"}},\"getTips(bytes32,address[],uint256,uint256)\":{\"params\":{\"feeRecipients\":\"The list of fee recipient addresses.\",\"limit\":\"The maximum number of results to return.\",\"offset\":\"The starting index for pagination.\",\"recipientCommentCid\":\"The comment CID of the recipient.\"},\"returns\":{\"_0\":\"result Array of TipData structs.\"}},\"getTipsAmounts(bytes32,address[],uint256,uint256)\":{\"params\":{\"feeRecipients\":\"The list of fee recipient addresses.\",\"limit\":\"The maximum number of results to return.\",\"offset\":\"The starting index for pagination.\",\"recipientCommentCid\":\"The comment CID of the recipient.\"},\"returns\":{\"amounts\":\"Array of tip amounts.\"}},\"getTipsTotalAmount(bytes32,address[])\":{\"params\":{\"feeRecipients\":\"The list of fee recipient addresses.\",\"recipientCommentCid\":\"The comment CID of the recipient.\"},\"returns\":{\"_0\":\"total The total amount tipped for the given parameters.\"}},\"getTipsTotalAmounts(bytes32[],address[][])\":{\"params\":{\"feeRecipients\":\"Array of arrays of fee recipient addresses.\",\"recipientCommentCids\":\"Array of recipient comment CIDs.\"},\"returns\":{\"_0\":\"totals Array of total amounts for each recipient comment.\"}},\"getTipsTotalAmountsSameFeeRecipients(bytes32[],address[])\":{\"params\":{\"feeRecipients\":\"Array of fee recipient addresses.\",\"recipientCommentCids\":\"Array of recipient comment CIDs.\"},\"returns\":{\"_0\":\"totals Array of total amounts for each recipient comment.\"}},\"grantRole(bytes32,address)\":{\"details\":\"Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event.\"},\"hasRole(bytes32,address)\":{\"details\":\"Returns `true` if `account` has been granted `role`.\"},\"renounceRole(bytes32,address)\":{\"details\":\"Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event.\"},\"revokeRole(bytes32,address)\":{\"details\":\"Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event.\"},\"setFeePercent(uint256)\":{\"details\":\"Only callable by accounts with MODERATOR_ROLE. Must be between 1 and 20.\",\"params\":{\"_feePercent\":\"The new fee percentage.\"}},\"setMinimumTipAmount(uint256)\":{\"details\":\"Only callable by accounts with MODERATOR_ROLE.\",\"params\":{\"_minimumTipAmount\":\"The new minimum tip amount (in wei).\"}},\"supportsInterface(bytes4)\":{\"details\":\"Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[ERC section] to learn more about how these ids are created. This function call must use less than 30 000 gas.\"},\"tip(address,uint256,address,bytes32,bytes32)\":{\"details\":\"The tip is tracked by both recipient and sender comment CIDs.\",\"params\":{\"amount\":\"The total amount to tip (must match msg.value).\",\"feeRecipient\":\"The address to receive the fee.\",\"recipient\":\"The address to receive the tip.\",\"recipientCommentCid\":\"The comment CID of the recipient.\",\"senderCommentCid\":\"Optional comment CID from the sender (0x0 if none).\"}}},\"title\":\"PlebbitTippingV1\",\"version\":1},\"userdoc\":{\"events\":{\"Tip(address,address,uint256,address,bytes32,bytes32)\":{\"notice\":\"Emitted when a tip is sent.\"}},\"kind\":\"user\",\"methods\":{\"MODERATOR_ROLE()\":{\"notice\":\"Role identifier for moderators.\"},\"constructor\":{\"notice\":\"Contract constructor.\"},\"feePercent()\":{\"notice\":\"The fee percentage (between 1 and 20). Can be changed by a moderator.\"},\"getSenderTipsTotalAmount(bytes32,address,bytes32,address[])\":{\"notice\":\"Get the total amount tipped by a sender for a given sender comment, recipient comment, and fee recipients.\"},\"getSenderTipsTotalAmounts(bytes32,address,bytes32[],address[][])\":{\"notice\":\"Get the total amounts tipped by a sender for multiple recipient comments and fee recipients.\"},\"getSenderTipsTotalAmountsSameFeeRecipients(bytes32,address,bytes32[],address[])\":{\"notice\":\"Get the total amounts tipped by a sender for multiple recipient comments, using the same fee recipients for each.\"},\"getTips(bytes32,address[],uint256,uint256)\":{\"notice\":\"Get the TipData structs for a recipient comment and fee recipients, with pagination.\"},\"getTipsAmounts(bytes32,address[],uint256,uint256)\":{\"notice\":\"Get the amounts of individual tips for a recipient comment and fee recipients, with pagination.\"},\"getTipsTotalAmount(bytes32,address[])\":{\"notice\":\"Get the total amount tipped for a recipient comment and a list of fee recipients.\"},\"getTipsTotalAmounts(bytes32[],address[][])\":{\"notice\":\"Get the total amounts tipped for multiple recipient comments and fee recipients.\"},\"getTipsTotalAmountsSameFeeRecipients(bytes32[],address[])\":{\"notice\":\"Get the total amounts tipped for multiple recipient comments, using the same fee recipients for each.\"},\"minimumTipAmount()\":{\"notice\":\"The minimum allowed tip amount (in wei). Can be changed by a moderator.\"},\"senderTipsTotalAmounts(bytes32)\":{\"notice\":\"Maps (senderCommentCid, sender, recipientCommentCid, feeRecipient) to the total amount tipped by sender.\"},\"setFeePercent(uint256)\":{\"notice\":\"Set the fee percentage.\"},\"setMinimumTipAmount(uint256)\":{\"notice\":\"Set the minimum allowed tip amount.\"},\"tip(address,uint256,address,bytes32,bytes32)\":{\"notice\":\"Send a tip to a recipient, with a portion going to a fee recipient.\"},\"tips(bytes32,uint256)\":{\"notice\":\"Maps (recipientCommentCid, feeRecipient) to an array of tips.\"},\"tipsTotalAmounts(bytes32)\":{\"notice\":\"Maps (recipientCommentCid, feeRecipient) to the total amount tipped.\"}},\"notice\":\"A contract for tipping users with ETH, supporting fee recipients and comment-based tracking.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/PlebbitTippingV1.sol\":\"PlebbitTippingV1\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/access/AccessControl.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.4.0) (access/AccessControl.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {IAccessControl} from \\\"./IAccessControl.sol\\\";\\nimport {Context} from \\\"../utils/Context.sol\\\";\\nimport {IERC165, ERC165} from \\\"../utils/introspection/ERC165.sol\\\";\\n\\n/**\\n * @dev Contract module that allows children to implement role-based access\\n * control mechanisms. This is a lightweight version that doesn't allow enumerating role\\n * members except through off-chain means by accessing the contract event logs. Some\\n * applications may benefit from on-chain enumerability, for those cases see\\n * {AccessControlEnumerable}.\\n *\\n * Roles are referred to by their `bytes32` identifier. These should be exposed\\n * in the external API and be unique. The best way to achieve this is by\\n * using `public constant` hash digests:\\n *\\n * ```solidity\\n * bytes32 public constant MY_ROLE = keccak256(\\\"MY_ROLE\\\");\\n * ```\\n *\\n * Roles can be used to represent a set of permissions. To restrict access to a\\n * function call, use {hasRole}:\\n *\\n * ```solidity\\n * function foo() public {\\n *     require(hasRole(MY_ROLE, msg.sender));\\n *     ...\\n * }\\n * ```\\n *\\n * Roles can be granted and revoked dynamically via the {grantRole} and\\n * {revokeRole} functions. Each role has an associated admin role, and only\\n * accounts that have a role's admin role can call {grantRole} and {revokeRole}.\\n *\\n * By default, the admin role for all roles is `DEFAULT_ADMIN_ROLE`, which means\\n * that only accounts with this role will be able to grant or revoke other\\n * roles. More complex role relationships can be created by using\\n * {_setRoleAdmin}.\\n *\\n * WARNING: The `DEFAULT_ADMIN_ROLE` is also its own admin: it has permission to\\n * grant and revoke this role. Extra precautions should be taken to secure\\n * accounts that have been granted it. We recommend using {AccessControlDefaultAdminRules}\\n * to enforce additional security measures for this role.\\n */\\nabstract contract AccessControl is Context, IAccessControl, ERC165 {\\n    struct RoleData {\\n        mapping(address account => bool) hasRole;\\n        bytes32 adminRole;\\n    }\\n\\n    mapping(bytes32 role => RoleData) private _roles;\\n\\n    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;\\n\\n    /**\\n     * @dev Modifier that checks that an account has a specific role. Reverts\\n     * with an {AccessControlUnauthorizedAccount} error including the required role.\\n     */\\n    modifier onlyRole(bytes32 role) {\\n        _checkRole(role);\\n        _;\\n    }\\n\\n    /// @inheritdoc IERC165\\n    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {\\n        return interfaceId == type(IAccessControl).interfaceId || super.supportsInterface(interfaceId);\\n    }\\n\\n    /**\\n     * @dev Returns `true` if `account` has been granted `role`.\\n     */\\n    function hasRole(bytes32 role, address account) public view virtual returns (bool) {\\n        return _roles[role].hasRole[account];\\n    }\\n\\n    /**\\n     * @dev Reverts with an {AccessControlUnauthorizedAccount} error if `_msgSender()`\\n     * is missing `role`. Overriding this function changes the behavior of the {onlyRole} modifier.\\n     */\\n    function _checkRole(bytes32 role) internal view virtual {\\n        _checkRole(role, _msgSender());\\n    }\\n\\n    /**\\n     * @dev Reverts with an {AccessControlUnauthorizedAccount} error if `account`\\n     * is missing `role`.\\n     */\\n    function _checkRole(bytes32 role, address account) internal view virtual {\\n        if (!hasRole(role, account)) {\\n            revert AccessControlUnauthorizedAccount(account, role);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the admin role that controls `role`. See {grantRole} and\\n     * {revokeRole}.\\n     *\\n     * To change a role's admin, use {_setRoleAdmin}.\\n     */\\n    function getRoleAdmin(bytes32 role) public view virtual returns (bytes32) {\\n        return _roles[role].adminRole;\\n    }\\n\\n    /**\\n     * @dev Grants `role` to `account`.\\n     *\\n     * If `account` had not been already granted `role`, emits a {RoleGranted}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     *\\n     * May emit a {RoleGranted} event.\\n     */\\n    function grantRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {\\n        _grantRole(role, account);\\n    }\\n\\n    /**\\n     * @dev Revokes `role` from `account`.\\n     *\\n     * If `account` had been granted `role`, emits a {RoleRevoked} event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function revokeRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {\\n        _revokeRole(role, account);\\n    }\\n\\n    /**\\n     * @dev Revokes `role` from the calling account.\\n     *\\n     * Roles are often managed via {grantRole} and {revokeRole}: this function's\\n     * purpose is to provide a mechanism for accounts to lose their privileges\\n     * if they are compromised (such as when a trusted device is misplaced).\\n     *\\n     * If the calling account had been revoked `role`, emits a {RoleRevoked}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must be `callerConfirmation`.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function renounceRole(bytes32 role, address callerConfirmation) public virtual {\\n        if (callerConfirmation != _msgSender()) {\\n            revert AccessControlBadConfirmation();\\n        }\\n\\n        _revokeRole(role, callerConfirmation);\\n    }\\n\\n    /**\\n     * @dev Sets `adminRole` as ``role``'s admin role.\\n     *\\n     * Emits a {RoleAdminChanged} event.\\n     */\\n    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {\\n        bytes32 previousAdminRole = getRoleAdmin(role);\\n        _roles[role].adminRole = adminRole;\\n        emit RoleAdminChanged(role, previousAdminRole, adminRole);\\n    }\\n\\n    /**\\n     * @dev Attempts to grant `role` to `account` and returns a boolean indicating if `role` was granted.\\n     *\\n     * Internal function without access restriction.\\n     *\\n     * May emit a {RoleGranted} event.\\n     */\\n    function _grantRole(bytes32 role, address account) internal virtual returns (bool) {\\n        if (!hasRole(role, account)) {\\n            _roles[role].hasRole[account] = true;\\n            emit RoleGranted(role, account, _msgSender());\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n\\n    /**\\n     * @dev Attempts to revoke `role` from `account` and returns a boolean indicating if `role` was revoked.\\n     *\\n     * Internal function without access restriction.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function _revokeRole(bytes32 role, address account) internal virtual returns (bool) {\\n        if (hasRole(role, account)) {\\n            _roles[role].hasRole[account] = false;\\n            emit RoleRevoked(role, account, _msgSender());\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x1a6b4f6b7798ab80929d491b89d5427a9b3338c0fd1acd0ba325f69c6f1646af\",\"license\":\"MIT\"},\"@openzeppelin/contracts/access/IAccessControl.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.4.0) (access/IAccessControl.sol)\\n\\npragma solidity >=0.8.4;\\n\\n/**\\n * @dev External interface of AccessControl declared to support ERC-165 detection.\\n */\\ninterface IAccessControl {\\n    /**\\n     * @dev The `account` is missing a role.\\n     */\\n    error AccessControlUnauthorizedAccount(address account, bytes32 neededRole);\\n\\n    /**\\n     * @dev The caller of a function is not the expected one.\\n     *\\n     * NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\\n     */\\n    error AccessControlBadConfirmation();\\n\\n    /**\\n     * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`\\n     *\\n     * `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite\\n     * {RoleAdminChanged} not being emitted to signal this.\\n     */\\n    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);\\n\\n    /**\\n     * @dev Emitted when `account` is granted `role`.\\n     *\\n     * `sender` is the account that originated the contract call. This account bears the admin role (for the granted role).\\n     * Expected in cases where the role was granted using the internal {AccessControl-_grantRole}.\\n     */\\n    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);\\n\\n    /**\\n     * @dev Emitted when `account` is revoked `role`.\\n     *\\n     * `sender` is the account that originated the contract call:\\n     *   - if using `revokeRole`, it is the admin role bearer\\n     *   - if using `renounceRole`, it is the role bearer (i.e. `account`)\\n     */\\n    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);\\n\\n    /**\\n     * @dev Returns `true` if `account` has been granted `role`.\\n     */\\n    function hasRole(bytes32 role, address account) external view returns (bool);\\n\\n    /**\\n     * @dev Returns the admin role that controls `role`. See {grantRole} and\\n     * {revokeRole}.\\n     *\\n     * To change a role's admin, use {AccessControl-_setRoleAdmin}.\\n     */\\n    function getRoleAdmin(bytes32 role) external view returns (bytes32);\\n\\n    /**\\n     * @dev Grants `role` to `account`.\\n     *\\n     * If `account` had not been already granted `role`, emits a {RoleGranted}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     */\\n    function grantRole(bytes32 role, address account) external;\\n\\n    /**\\n     * @dev Revokes `role` from `account`.\\n     *\\n     * If `account` had been granted `role`, emits a {RoleRevoked} event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have ``role``'s admin role.\\n     */\\n    function revokeRole(bytes32 role, address account) external;\\n\\n    /**\\n     * @dev Revokes `role` from the calling account.\\n     *\\n     * Roles are often managed via {grantRole} and {revokeRole}: this function's\\n     * purpose is to provide a mechanism for accounts to lose their privileges\\n     * if they are compromised (such as when a trusted device is misplaced).\\n     *\\n     * If the calling account had been granted `role`, emits a {RoleRevoked}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must be `callerConfirmation`.\\n     */\\n    function renounceRole(bytes32 role, address callerConfirmation) external;\\n}\\n\",\"keccak256\":\"0xbff9f59c84e5337689161ce7641c0ef8e872d6a7536fbc1f5133f128887aba3c\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/introspection/ERC165.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.4.0) (utils/introspection/ERC165.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {IERC165} from \\\"./IERC165.sol\\\";\\n\\n/**\\n * @dev Implementation of the {IERC165} interface.\\n *\\n * Contracts that want to implement ERC-165 should inherit from this contract and override {supportsInterface} to check\\n * for the additional interface id that will be supported. For example:\\n *\\n * ```solidity\\n * function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {\\n *     return interfaceId == type(MyInterface).interfaceId || super.supportsInterface(interfaceId);\\n * }\\n * ```\\n */\\nabstract contract ERC165 is IERC165 {\\n    /// @inheritdoc IERC165\\n    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {\\n        return interfaceId == type(IERC165).interfaceId;\\n    }\\n}\\n\",\"keccak256\":\"0x2d9dc2fe26180f74c11c13663647d38e259e45f95eb88f57b61d2160b0109d3e\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/introspection/IERC165.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.4.0) (utils/introspection/IERC165.sol)\\n\\npragma solidity >=0.4.16;\\n\\n/**\\n * @dev Interface of the ERC-165 standard, as defined in the\\n * https://eips.ethereum.org/EIPS/eip-165[ERC].\\n *\\n * Implementers can declare support of contract interfaces, which can then be\\n * queried by others ({ERC165Checker}).\\n *\\n * For an implementation, see {ERC165}.\\n */\\ninterface IERC165 {\\n    /**\\n     * @dev Returns true if this contract implements the interface defined by\\n     * `interfaceId`. See the corresponding\\n     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[ERC section]\\n     * to learn more about how these ids are created.\\n     *\\n     * This function call must use less than 30 000 gas.\\n     */\\n    function supportsInterface(bytes4 interfaceId) external view returns (bool);\\n}\\n\",\"keccak256\":\"0x8891738ffe910f0cf2da09566928589bf5d63f4524dd734fd9cedbac3274dd5c\",\"license\":\"MIT\"},\"contracts/PlebbitTippingV1.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nimport \\\"@openzeppelin/contracts/access/AccessControl.sol\\\";\\n\\n/**\\n * @title PlebbitTippingV1\\n * @notice A contract for tipping users with ETH, supporting fee recipients and comment-based tracking.\\n * @dev Uses AccessControl for moderator/admin permissions.\\n */\\ncontract PlebbitTippingV1 is AccessControl {\\n    /**\\n     * @notice Struct representing a single tip.\\n     * @param amount The amount of ETH tipped (uint96 for gas savings).\\n     * @param feeRecipient The address receiving the fee portion.\\n     * @param sender The address of the tip sender.\\n     * @param senderCommentCid Optional comment CID from the sender (0x0 if none).\\n     */\\n    struct TipData {\\n        uint96 amount;\\n        address feeRecipient;\\n        address sender;\\n        bytes32 senderCommentCid;\\n    }\\n\\n    /// @notice Maps (recipientCommentCid, feeRecipient) to an array of tips.\\n    mapping(bytes32 => TipData[]) public tips;\\n\\n    /// @notice Maps (recipientCommentCid, feeRecipient) to the total amount tipped.\\n    mapping(bytes32 => uint256) public tipsTotalAmounts;\\n\\n    /// @notice Maps (senderCommentCid, sender, recipientCommentCid, feeRecipient) to the total amount tipped by sender.\\n    mapping(bytes32 => uint256) public senderTipsTotalAmounts;\\n\\n    /// @notice The minimum allowed tip amount (in wei). Can be changed by a moderator.\\n    uint256 public minimumTipAmount;\\n\\n    /// @notice The fee percentage (between 1 and 20). Can be changed by a moderator.\\n    uint256 public feePercent;\\n\\n    /// @notice Role identifier for moderators.\\n    bytes32 public constant MODERATOR_ROLE = keccak256(\\\"MODERATOR_ROLE\\\");\\n\\n    /**\\n     * @notice Emitted when a tip is sent.\\n     * @param sender The address sending the tip.\\n     * @param recipient The address receiving the tip.\\n     * @param amount The total amount tipped.\\n     * @param feeRecipient The address receiving the fee.\\n     * @param recipientCommentCid The comment CID of the recipient.\\n     * @param senderCommentCid The comment CID of the sender (0x0 if none).\\n     */\\n    event Tip(\\n        address indexed sender,\\n        address indexed recipient,\\n        uint256 amount,\\n        address indexed feeRecipient,\\n        bytes32 recipientCommentCid,\\n        bytes32 senderCommentCid\\n    );\\n\\n    /**\\n     * @notice Contract constructor.\\n     * @param _admin The address to be granted DEFAULT_ADMIN_ROLE.\\n     * @param _minimumTipAmount The minimum tip amount (in wei).\\n     * @param _feePercent The fee percentage (between 1 and 20).\\n     */\\n    constructor(address _admin, uint256 _minimumTipAmount, uint256 _feePercent) {\\n        minimumTipAmount = _minimumTipAmount;\\n        feePercent = _feePercent;\\n        _grantRole(DEFAULT_ADMIN_ROLE, _admin);\\n    }\\n\\n    /**\\n     * @notice Send a tip to a recipient, with a portion going to a fee recipient.\\n     * @dev The tip is tracked by both recipient and sender comment CIDs.\\n     * @param recipient The address to receive the tip.\\n     * @param amount The total amount to tip (must match msg.value).\\n     * @param feeRecipient The address to receive the fee.\\n     * @param senderCommentCid Optional comment CID from the sender (0x0 if none).\\n     * @param recipientCommentCid The comment CID of the recipient.\\n     */\\n    function tip(\\n        address recipient,\\n        uint256 amount,\\n        address feeRecipient,\\n        bytes32 senderCommentCid,\\n        bytes32 recipientCommentCid\\n    ) external payable {\\n        require(msg.value >= minimumTipAmount, \\\"Tip amount is too low\\\");\\n        require(msg.value == amount, \\\"Sent value doesn't match amount\\\");\\n        \\n        // Calculate fee and recipient amount\\n        uint256 fee = (amount * feePercent) / 100;\\n        uint256 receivedAmount = amount - fee;\\n\\n        // Transfer fee and tip\\n        payable(feeRecipient).transfer(fee);\\n        payable(recipient).transfer(receivedAmount);\\n\\n        // Track tip by recipient comment and fee recipient\\n        bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipient));\\n        tips[tipKey].push(TipData(uint96(amount), feeRecipient, msg.sender, senderCommentCid));\\n        tipsTotalAmounts[tipKey] += amount;\\n\\n        // Track total tipped by sender for this combination\\n        bytes32 senderTipKey = keccak256(abi.encode(senderCommentCid, msg.sender, recipientCommentCid, feeRecipient));\\n        senderTipsTotalAmounts[senderTipKey] += amount;\\n\\n        emit Tip(msg.sender, recipient, amount, feeRecipient, recipientCommentCid, senderCommentCid);\\n    }\\n\\n    /**\\n     * @notice Get the total amount tipped for a recipient comment and a list of fee recipients.\\n     * @param recipientCommentCid The comment CID of the recipient.\\n     * @param feeRecipients The list of fee recipient addresses.\\n     * @return total The total amount tipped for the given parameters.\\n     */\\n    function getTipsTotalAmount(\\n        bytes32 recipientCommentCid,\\n        address[] calldata feeRecipients\\n    ) external view returns (uint256) {\\n        uint256 total = 0;\\n        for (uint256 i = 0; i < feeRecipients.length; i++) {\\n            bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));\\n            total += tipsTotalAmounts[tipKey];\\n        }\\n        return total;\\n    }\\n\\n    /**\\n     * @notice Get the total amounts tipped for multiple recipient comments and fee recipients.\\n     * @param recipientCommentCids Array of recipient comment CIDs.\\n     * @param feeRecipients Array of arrays of fee recipient addresses.\\n     * @return totals Array of total amounts for each recipient comment.\\n     */\\n    function getTipsTotalAmounts(\\n        bytes32[] calldata recipientCommentCids,\\n        address[][] calldata feeRecipients\\n    ) external view returns (uint256[] memory) {\\n        require(recipientCommentCids.length == feeRecipients.length, \\\"Arrays length mismatch\\\");\\n        uint256[] memory totals = new uint256[](recipientCommentCids.length);\\n        \\n        for (uint256 i = 0; i < recipientCommentCids.length; i++) {\\n            for (uint256 j = 0; j < feeRecipients[i].length; j++) {\\n                bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCids[i], feeRecipients[i][j]));\\n                totals[i] += tipsTotalAmounts[tipKey];\\n            }\\n        }\\n        return totals;\\n    }\\n\\n    /**\\n     * @notice Get the total amounts tipped for multiple recipient comments, using the same fee recipients for each.\\n     * @param recipientCommentCids Array of recipient comment CIDs.\\n     * @param feeRecipients Array of fee recipient addresses.\\n     * @return totals Array of total amounts for each recipient comment.\\n     */\\n    function getTipsTotalAmountsSameFeeRecipients(\\n        bytes32[] calldata recipientCommentCids,\\n        address[] calldata feeRecipients\\n    ) external view returns (uint256[] memory) {\\n        uint256[] memory totals = new uint256[](recipientCommentCids.length);\\n        \\n        for (uint256 i = 0; i < recipientCommentCids.length; i++) {\\n            for (uint256 j = 0; j < feeRecipients.length; j++) {\\n                bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCids[i], feeRecipients[j]));\\n                totals[i] += tipsTotalAmounts[tipKey];\\n            }\\n        }\\n        return totals;\\n    }\\n\\n    /**\\n     * @notice Get the amounts of individual tips for a recipient comment and fee recipients, with pagination.\\n     * @param recipientCommentCid The comment CID of the recipient.\\n     * @param feeRecipients The list of fee recipient addresses.\\n     * @param offset The starting index for pagination.\\n     * @param limit The maximum number of results to return.\\n     * @return amounts Array of tip amounts.\\n     */\\n    function getTipsAmounts(\\n        bytes32 recipientCommentCid,\\n        address[] calldata feeRecipients,\\n        uint256 offset,\\n        uint256 limit\\n    ) external view returns (uint256[] memory amounts) {\\n        uint256 totalTips = 0;\\n        \\n        // Count total tips across all feeRecipients\\n        for (uint256 i = 0; i < feeRecipients.length; i++) {\\n            bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));\\n            totalTips += tips[tipKey].length;\\n        }\\n        \\n        if (offset >= totalTips) {\\n            return new uint256[](0);\\n        }\\n        \\n        uint256 maxResults = limit;\\n        if (offset + limit > totalTips) {\\n            maxResults = totalTips - offset;\\n        }\\n        \\n        amounts = new uint256[](maxResults);\\n        uint256 currentIndex = 0;\\n        uint256 resultIndex = 0;\\n        \\n        for (uint256 i = 0; i < feeRecipients.length && resultIndex < maxResults; i++) {\\n            bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));\\n            TipData[] storage tipArray = tips[tipKey];\\n            \\n            for (uint256 j = 0; j < tipArray.length && resultIndex < maxResults; j++) {\\n                if (currentIndex >= offset) {\\n                    amounts[resultIndex] = tipArray[j].amount;\\n                    resultIndex++;\\n                }\\n                currentIndex++;\\n            }\\n        }\\n        \\n        return amounts;\\n    }\\n\\n    /**\\n     * @notice Get the TipData structs for a recipient comment and fee recipients, with pagination.\\n     * @param recipientCommentCid The comment CID of the recipient.\\n     * @param feeRecipients The list of fee recipient addresses.\\n     * @param offset The starting index for pagination.\\n     * @param limit The maximum number of results to return.\\n     * @return result Array of TipData structs.\\n     */\\n    function getTips(\\n        bytes32 recipientCommentCid,\\n        address[] calldata feeRecipients,\\n        uint256 offset,\\n        uint256 limit\\n    ) external view returns (TipData[] memory) {\\n        uint256 totalTips = 0;\\n        \\n        // Count total tips across all feeRecipients\\n        for (uint256 i = 0; i < feeRecipients.length; i++) {\\n            bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));\\n            totalTips += tips[tipKey].length;\\n        }\\n        \\n        if (offset >= totalTips) {\\n            return new TipData[](0);\\n        }\\n        \\n        uint256 maxResults = limit;\\n        if (offset + limit > totalTips) {\\n            maxResults = totalTips - offset;\\n        }\\n        \\n        TipData[] memory result = new TipData[](maxResults);\\n        uint256 currentIndex = 0;\\n        uint256 resultIndex = 0;\\n        \\n        for (uint256 i = 0; i < feeRecipients.length && resultIndex < maxResults; i++) {\\n            bytes32 tipKey = keccak256(abi.encodePacked(recipientCommentCid, feeRecipients[i]));\\n            TipData[] storage tipArray = tips[tipKey];\\n            \\n            for (uint256 j = 0; j < tipArray.length && resultIndex < maxResults; j++) {\\n                if (currentIndex >= offset) {\\n                    result[resultIndex] = tipArray[j];\\n                    resultIndex++;\\n                }\\n                currentIndex++;\\n            }\\n        }\\n        \\n        return result;\\n    }\\n\\n    /**\\n     * @notice Get the total amount tipped by a sender for a given sender comment, recipient comment, and fee recipients.\\n     * @param senderCommentCid The comment CID from the sender (0x0 if none).\\n     * @param sender The address of the tip sender.\\n     * @param recipientCommentCid The comment CID of the recipient.\\n     * @param feeRecipients The list of fee recipient addresses.\\n     * @return total The total amount tipped by the sender for these parameters.\\n     */\\n    function getSenderTipsTotalAmount(\\n        bytes32 senderCommentCid,\\n        address sender,\\n        bytes32 recipientCommentCid,\\n        address[] calldata feeRecipients\\n    ) external view returns (uint256) {\\n        uint256 total = 0;\\n        for (uint256 i = 0; i < feeRecipients.length; i++) {\\n            // Generate a unique key for this combination of sender, comments, and fee recipient\\n            bytes32 senderTipKey = keccak256(abi.encode(senderCommentCid, sender, recipientCommentCid, feeRecipients[i]));\\n            total += senderTipsTotalAmounts[senderTipKey];\\n        }\\n        return total;\\n    }\\n\\n    /**\\n     * @notice Get the total amounts tipped by a sender for multiple recipient comments and fee recipients.\\n     * @param senderCommentCid The comment CID from the sender (0x0 if none).\\n     * @param sender The address of the tip sender.\\n     * @param recipientCommentCids Array of recipient comment CIDs.\\n     * @param feeRecipients Array of arrays of fee recipient addresses.\\n     * @return totals Array of total amounts for each recipient comment.\\n     */\\n    function getSenderTipsTotalAmounts(\\n        bytes32 senderCommentCid,\\n        address sender,\\n        bytes32[] calldata recipientCommentCids,\\n        address[][] calldata feeRecipients\\n    ) external view returns (uint256[] memory) {\\n        require(recipientCommentCids.length == feeRecipients.length, \\\"Arrays length mismatch\\\");\\n        uint256[] memory totals = new uint256[](recipientCommentCids.length);\\n        \\n        for (uint256 i = 0; i < recipientCommentCids.length; i++) {\\n            for (uint256 j = 0; j < feeRecipients[i].length; j++) {\\n                bytes32 senderTipKey = keccak256(abi.encode(senderCommentCid, sender, recipientCommentCids[i], feeRecipients[i][j]));\\n                totals[i] += senderTipsTotalAmounts[senderTipKey];\\n            }\\n        }\\n        return totals;\\n    }\\n\\n    /**\\n     * @notice Get the total amounts tipped by a sender for multiple recipient comments, using the same fee recipients for each.\\n     * @param senderCommentCid The comment CID from the sender (0x0 if none).\\n     * @param sender The address of the tip sender.\\n     * @param recipientCommentCids Array of recipient comment CIDs.\\n     * @param feeRecipients Array of fee recipient addresses.\\n     * @return totals Array of total amounts for each recipient comment.\\n     */\\n    function getSenderTipsTotalAmountsSameFeeRecipients(\\n        bytes32 senderCommentCid,\\n        address sender,\\n        bytes32[] calldata recipientCommentCids,\\n        address[] calldata feeRecipients\\n    ) external view returns (uint256[] memory) {\\n        uint256[] memory totals = new uint256[](recipientCommentCids.length);\\n        \\n        for (uint256 i = 0; i < recipientCommentCids.length; i++) {\\n            for (uint256 j = 0; j < feeRecipients.length; j++) {\\n                bytes32 senderTipKey = keccak256(abi.encode(senderCommentCid, sender, recipientCommentCids[i], feeRecipients[j]));\\n                totals[i] += senderTipsTotalAmounts[senderTipKey];\\n            }\\n        }\\n        return totals;\\n    }\\n\\n    // Admin functions\\n\\n    /**\\n     * @notice Set the minimum allowed tip amount.\\n     * @dev Only callable by accounts with MODERATOR_ROLE.\\n     * @param _minimumTipAmount The new minimum tip amount (in wei).\\n     */\\n    function setMinimumTipAmount(uint256 _minimumTipAmount) external onlyRole(MODERATOR_ROLE) {\\n        minimumTipAmount = _minimumTipAmount;\\n    }\\n\\n    /**\\n     * @notice Set the fee percentage.\\n     * @dev Only callable by accounts with MODERATOR_ROLE. Must be between 1 and 20.\\n     * @param _feePercent The new fee percentage.\\n     */\\n    function setFeePercent(uint256 _feePercent) external onlyRole(MODERATOR_ROLE) {\\n        require(_feePercent >= 1 && _feePercent <= 20, \\\"Fee percent must be between 1 and 20\\\");\\n        feePercent = _feePercent;\\n    }\\n}\\n\",\"keccak256\":\"0xc4c485e927b3bcf9f9a28757efb7de0b5e3993342ed40a96b765056cbdc1873c\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60806040523480156200001157600080fd5b5060405162001eee38038062001eee833981016040819052620000349162000104565b600482905560058190556200004b60008462000055565b5050505062000149565b6000828152602081815260408083206001600160a01b038516845290915281205460ff16620000fa576000838152602081815260408083206001600160a01b03861684529091529020805460ff19166001179055620000b13390565b6001600160a01b0316826001600160a01b0316847f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a4506001620000fe565b5060005b92915050565b6000806000606084860312156200011a57600080fd5b83516001600160a01b03811681146200013257600080fd5b602085015160409095015190969495509392505050565b611d9580620001596000396000f3fe60806040526004361061014b5760003560e01c80637bcdfa7a116100b6578063b3289b171161006f578063b3289b171461040b578063b73adf901461042b578063d3c4e4df1461044b578063d547741f1461046b578063d9e4e44f1461048b578063e49de283146104ab57600080fd5b80637bcdfa7a1461031c5780637ce3489b146103735780637fd6f15c1461039357806391d0e383146103a957806391d14854146103d6578063a217fddf146103f657600080fd5b806344f14eb61161010857806344f14eb6146102485780634714516f1461025b578063513c038f146102885780636ebb2c99146102a8578063797669c9146102c85780637ae31498146102fc57600080fd5b806301ffc9a71461015057806307c01bf214610185578063248a9ca3146101b25780632a49d418146101f05780632f2ff15d1461020657806336568abe14610228575b600080fd5b34801561015c57600080fd5b5061017061016b3660046117ed565b6104d8565b60405190151581526020015b60405180910390f35b34801561019157600080fd5b506101a56101a0366004611869565b61050f565b60405161017c91906118c6565b3480156101be57600080fd5b506101e26101cd36600461190a565b60009081526020819052604090206001015490565b60405190815260200161017c565b3480156101fc57600080fd5b506101e260045481565b34801561021257600080fd5b5061022661022136600461193f565b610760565b005b34801561023457600080fd5b5061022661024336600461193f565b61078b565b61022661025636600461196b565b6107c3565b34801561026757600080fd5b506101e261027636600461190a565b60026020526000908152604090205481565b34801561029457600080fd5b506101a56102a33660046119b9565b610b14565b3480156102b457600080fd5b506101e26102c3366004611a24565b610cda565b3480156102d457600080fd5b506101e27f71f3d55856e4058ed06ee057d79ada615f65cdf5f9ee88181b914225088f834f81565b34801561030857600080fd5b5061022661031736600461190a565b610d73565b34801561032857600080fd5b5061033c610337366004611a6f565b610da3565b604080516001600160601b039590951685526001600160a01b0393841660208601529190921690830152606082015260800161017c565b34801561037f57600080fd5b5061022661038e36600461190a565b610e02565b34801561039f57600080fd5b506101e260055481565b3480156103b557600080fd5b506103c96103c4366004611869565b610e9c565b60405161017c9190611a91565b3480156103e257600080fd5b506101706103f136600461193f565b61118f565b34801561040257600080fd5b506101e2600081565b34801561041757600080fd5b506101a56104263660046119b9565b6111b8565b34801561043757600080fd5b506101a5610446366004611b0a565b6112e5565b34801561045757600080fd5b506101e2610466366004611b93565b6114b1565b34801561047757600080fd5b5061022661048636600461193f565b611550565b34801561049757600080fd5b506101a56104a6366004611b0a565b611575565b3480156104b757600080fd5b506101e26104c636600461190a565b60036020526000908152604090205481565b60006001600160e01b03198216637965db0b60e01b148061050957506301ffc9a760e01b6001600160e01b03198316145b92915050565b60606000805b858110156105a05760008888888481811061053257610532611bfa565b90506020020160208101906105479190611c10565b604051602001610558929190611c2b565b60408051601f1981840301815291815281516020928301206000818152600190935291205490915061058a9084611c61565b925050808061059890611c74565b915050610515565b508084106105c35760408051600080825260208201909252905b50915050610757565b82816105cf8287611c61565b11156105e2576105df8583611ca3565b90505b806001600160401b038111156105fa576105fa611c8d565b604051908082528060200260200182016040528015610623578160200160208202803683370190505b50925060008060005b888110801561063a57508382105b156107515760008b8b8b8481811061065457610654611bfa565b90506020020160208101906106699190611c10565b60405160200161067a929190611c2b565b60408051601f19818403018152918152815160209283012060008181526001909352908220909250905b8154811080156106b357508685105b1561073b578a861061071b578181815481106106d1576106d1611bfa565b600091825260209091206003909102015489516001600160601b03909116908a908790811061070257610702611bfa565b60209081029190910101528461071781611c74565b9550505b8561072581611c74565b965050808061073390611c74565b9150506106a4565b505050808061074990611c74565b91505061062c565b50505050505b95945050505050565b60008281526020819052604090206001015461077b816116a6565b61078583836116b3565b50505050565b6001600160a01b03811633146107b45760405163334bd91960e11b815260040160405180910390fd5b6107be8282611745565b505050565b6004543410156108125760405162461bcd60e51b815260206004820152601560248201527454697020616d6f756e7420697320746f6f206c6f7760581b60448201526064015b60405180910390fd5b8334146108615760405162461bcd60e51b815260206004820152601f60248201527f53656e742076616c756520646f65736e2774206d6174636820616d6f756e74006044820152606401610809565b60006064600554866108739190611cb6565b61087d9190611ccd565b9050600061088b8287611ca3565b6040519091506001600160a01b0386169083156108fc029084906000818181858888f193505050501580156108c4573d6000803e3d6000fd5b506040516001600160a01b0388169082156108fc029083906000818181858888f193505050501580156108fb573d6000803e3d6000fd5b5060008386604051602001610911929190611c2b565b604051602081830303815290604052805190602001209050600160008281526020019081526020016000206040518060800160405280896001600160601b03168152602001886001600160a01b03168152602001336001600160a01b0316815260200187815250908060018154018082558091505060019003906000526020600020906003020160009091909190915060008201518160000160006101000a8154816001600160601b0302191690836001600160601b03160217905550602082015181600001600c6101000a8154816001600160a01b0302191690836001600160a01b0316021790555060408201518160010160006101000a8154816001600160a01b0302191690836001600160a01b0316021790555060608201518160020155505086600260008381526020019081526020016000206000828254610a579190611c61565b9091555050604051600090610a76908790339088908b90602001611cef565b60405160208183030381529060405280519060200120905087600360008381526020019081526020016000206000828254610ab19190611c61565b909155505060408051898152602081018790529081018790526001600160a01b0380891691908b169033907f5cdb0f7813a64a2caf6aa7559b9945cf37cef9897be2aed5e0edad7ae4fdab019060600160405180910390a4505050505050505050565b6060838214610b5e5760405162461bcd60e51b8152602060048201526016602482015275082e4e4c2f2e640d8cadccee8d040dad2e6dac2e8c6d60531b6044820152606401610809565b6000846001600160401b03811115610b7857610b78611c8d565b604051908082528060200260200182016040528015610ba1578160200160208202803683370190505b50905060005b85811015610cd05760005b858583818110610bc457610bc4611bfa565b9050602002810190610bd69190611d16565b9050811015610cbd576000888884818110610bf357610bf3611bfa565b90506020020135878785818110610c0c57610c0c611bfa565b9050602002810190610c1e9190611d16565b84818110610c2e57610c2e611bfa565b9050602002016020810190610c439190611c10565b604051602001610c54929190611c2b565b6040516020818303038152906040528051906020012090506002600082815260200190815260200160002054848481518110610c9257610c92611bfa565b60200260200101818151610ca69190611c61565b905250819050610cb581611c74565b915050610bb2565b5080610cc881611c74565b915050610ba7565b5095945050505050565b600080805b83811015610d6a57600086868684818110610cfc57610cfc611bfa565b9050602002016020810190610d119190611c10565b604051602001610d22929190611c2b565b60408051601f19818403018152918152815160209283012060008181526002909352912054909150610d549084611c61565b9250508080610d6290611c74565b915050610cdf565b50949350505050565b7f71f3d55856e4058ed06ee057d79ada615f65cdf5f9ee88181b914225088f834f610d9d816116a6565b50600455565b60016020528160005260406000208181548110610dbf57600080fd5b60009182526020909120600390910201805460018201546002909201546001600160601b03821694506001600160a01b03600160601b9092048216935091169084565b7f71f3d55856e4058ed06ee057d79ada615f65cdf5f9ee88181b914225088f834f610e2c816116a6565b60018210158015610e3e575060148211155b610e965760405162461bcd60e51b8152602060048201526024808201527f4665652070657263656e74206d757374206265206265747765656e203120616e6044820152630642032360e41b6064820152608401610809565b50600555565b60606000805b85811015610f2d57600088888884818110610ebf57610ebf611bfa565b9050602002016020810190610ed49190611c10565b604051602001610ee5929190611c2b565b60408051601f19818403018152918152815160209283012060008181526001909352912054909150610f179084611c61565b9250508080610f2590611c74565b915050610ea2565b50808410610f875760408051600080825260208201909252906105ba565b604080516080810182526000808252602080830182905292820181905260608201528252600019909201910181610f4b57905050915050610757565b8281610f938287611c61565b1115610fa657610fa38583611ca3565b90505b6000816001600160401b03811115610fc057610fc0611c8d565b60405190808252806020026020018201604052801561101257816020015b604080516080810182526000808252602080830182905292820181905260608201528252600019909201910181610fde5790505b50905060008060005b898110801561102957508482105b1561117f5760008c8c8c8481811061104357611043611bfa565b90506020020160208101906110589190611c10565b604051602001611069929190611c2b565b60408051601f19818403018152918152815160209283012060008181526001909352908220909250905b8154811080156110a257508785105b15611169578b8610611149578181815481106110c0576110c0611bfa565b600091825260209182902060408051608081018252600390930290910180546001600160601b03811684526001600160a01b03600160601b9091048116948401949094526001810154909316908201526002909101546060820152875188908790811061112f5761112f611bfa565b6020026020010181905250848061114590611c74565b9550505b8561115381611c74565b965050808061116190611c74565b915050611093565b505050808061117790611c74565b91505061101b565b50919a9950505050505050505050565b6000918252602082815260408084206001600160a01b0393909316845291905290205460ff1690565b60606000846001600160401b038111156111d4576111d4611c8d565b6040519080825280602002602001820160405280156111fd578160200160208202803683370190505b50905060005b85811015610cd05760005b848110156112d257600088888481811061122a5761122a611bfa565b9050602002013587878481811061124357611243611bfa565b90506020020160208101906112589190611c10565b604051602001611269929190611c2b565b60405160208183030381529060405280519060200120905060026000828152602001908152602001600020548484815181106112a7576112a7611bfa565b602002602001018181516112bb9190611c61565b9052508190506112ca81611c74565b91505061120e565b50806112dd81611c74565b915050611203565b606083821461132f5760405162461bcd60e51b8152602060048201526016602482015275082e4e4c2f2e640d8cadccee8d040dad2e6dac2e8c6d60531b6044820152606401610809565b6000846001600160401b0381111561134957611349611c8d565b604051908082528060200260200182016040528015611372578160200160208202803683370190505b50905060005b858110156114a55760005b85858381811061139557611395611bfa565b90506020028101906113a79190611d16565b90508110156114925760008a8a8a8a868181106113c6576113c6611bfa565b905060200201358989878181106113df576113df611bfa565b90506020028101906113f19190611d16565b8681811061140157611401611bfa565b90506020020160208101906114169190611c10565b6040516020016114299493929190611cef565b604051602081830303815290604052805190602001209050600360008281526020019081526020016000205484848151811061146757611467611bfa565b6020026020010181815161147b9190611c61565b90525081905061148a81611c74565b915050611383565b508061149d81611c74565b915050611378565b50979650505050505050565b600080805b838110156115455760008888888888868181106114d5576114d5611bfa565b90506020020160208101906114ea9190611c10565b6040516020016114fd9493929190611cef565b60408051601f1981840301815291815281516020928301206000818152600390935291205490915061152f9084611c61565b925050808061153d90611c74565b9150506114b6565b509695505050505050565b60008281526020819052604090206001015461156b816116a6565b6107858383611745565b60606000846001600160401b0381111561159157611591611c8d565b6040519080825280602002602001820160405280156115ba578160200160208202803683370190505b50905060005b858110156114a55760005b848110156116935760008a8a8a8a868181106115e9576115e9611bfa565b9050602002013589898681811061160257611602611bfa565b90506020020160208101906116179190611c10565b60405160200161162a9493929190611cef565b604051602081830303815290604052805190602001209050600360008281526020019081526020016000205484848151811061166857611668611bfa565b6020026020010181815161167c9190611c61565b90525081905061168b81611c74565b9150506115cb565b508061169e81611c74565b9150506115c0565b6116b081336117b0565b50565b60006116bf838361118f565b61173d576000838152602081815260408083206001600160a01b03861684529091529020805460ff191660011790556116f53390565b6001600160a01b0316826001600160a01b0316847f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a4506001610509565b506000610509565b6000611751838361118f565b1561173d576000838152602081815260408083206001600160a01b0386168085529252808320805460ff1916905551339286917ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9190a4506001610509565b6117ba828261118f565b6117e95760405163e2517d3f60e01b81526001600160a01b038216600482015260248101839052604401610809565b5050565b6000602082840312156117ff57600080fd5b81356001600160e01b03198116811461181757600080fd5b9392505050565b60008083601f84011261183057600080fd5b5081356001600160401b0381111561184757600080fd5b6020830191508360208260051b850101111561186257600080fd5b9250929050565b60008060008060006080868803121561188157600080fd5b8535945060208601356001600160401b0381111561189e57600080fd5b6118aa8882890161181e565b9699909850959660408101359660609091013595509350505050565b6020808252825182820181905260009190848201906040850190845b818110156118fe578351835292840192918401916001016118e2565b50909695505050505050565b60006020828403121561191c57600080fd5b5035919050565b80356001600160a01b038116811461193a57600080fd5b919050565b6000806040838503121561195257600080fd5b8235915061196260208401611923565b90509250929050565b600080600080600060a0868803121561198357600080fd5b61198c86611923565b9450602086013593506119a160408701611923565b94979396509394606081013594506080013592915050565b600080600080604085870312156119cf57600080fd5b84356001600160401b03808211156119e657600080fd5b6119f28883890161181e565b90965094506020870135915080821115611a0b57600080fd5b50611a188782880161181e565b95989497509550505050565b600080600060408486031215611a3957600080fd5b8335925060208401356001600160401b03811115611a5657600080fd5b611a628682870161181e565b9497909650939450505050565b60008060408385031215611a8257600080fd5b50508035926020909101359150565b602080825282518282018190526000919060409081850190868401855b82811015611afd57815180516001600160601b03168552868101516001600160a01b03908116888701528682015116868601526060908101519085015260809093019290850190600101611aae565b5091979650505050505050565b60008060008060008060808789031215611b2357600080fd5b86359550611b3360208801611923565b945060408701356001600160401b0380821115611b4f57600080fd5b611b5b8a838b0161181e565b90965094506060890135915080821115611b7457600080fd5b50611b8189828a0161181e565b979a9699509497509295939492505050565b600080600080600060808688031215611bab57600080fd5b85359450611bbb60208701611923565b93506040860135925060608601356001600160401b03811115611bdd57600080fd5b611be98882890161181e565b969995985093965092949392505050565b634e487b7160e01b600052603260045260246000fd5b600060208284031215611c2257600080fd5b61181782611923565b91825260601b6bffffffffffffffffffffffff1916602082015260340190565b634e487b7160e01b600052601160045260246000fd5b8082018082111561050957610509611c4b565b600060018201611c8657611c86611c4b565b5060010190565b634e487b7160e01b600052604160045260246000fd5b8181038181111561050957610509611c4b565b808202811582820484141761050957610509611c4b565b600082611cea57634e487b7160e01b600052601260045260246000fd5b500490565b9384526001600160a01b039283166020850152604084019190915216606082015260800190565b6000808335601e19843603018112611d2d57600080fd5b8301803591506001600160401b03821115611d4757600080fd5b6020019150600581901b360382131561186257600080fdfea26469706673582212206e29d186e03c2fd7d1caff5bbea6b58cb1095caf08118e34ffe3264f686ca78c64736f6c63430008140033",
+  "deployedBytecode": "0x60806040526004361061014b5760003560e01c80637bcdfa7a116100b6578063b3289b171161006f578063b3289b171461040b578063b73adf901461042b578063d3c4e4df1461044b578063d547741f1461046b578063d9e4e44f1461048b578063e49de283146104ab57600080fd5b80637bcdfa7a1461031c5780637ce3489b146103735780637fd6f15c1461039357806391d0e383146103a957806391d14854146103d6578063a217fddf146103f657600080fd5b806344f14eb61161010857806344f14eb6146102485780634714516f1461025b578063513c038f146102885780636ebb2c99146102a8578063797669c9146102c85780637ae31498146102fc57600080fd5b806301ffc9a71461015057806307c01bf214610185578063248a9ca3146101b25780632a49d418146101f05780632f2ff15d1461020657806336568abe14610228575b600080fd5b34801561015c57600080fd5b5061017061016b3660046117ed565b6104d8565b60405190151581526020015b60405180910390f35b34801561019157600080fd5b506101a56101a0366004611869565b61050f565b60405161017c91906118c6565b3480156101be57600080fd5b506101e26101cd36600461190a565b60009081526020819052604090206001015490565b60405190815260200161017c565b3480156101fc57600080fd5b506101e260045481565b34801561021257600080fd5b5061022661022136600461193f565b610760565b005b34801561023457600080fd5b5061022661024336600461193f565b61078b565b61022661025636600461196b565b6107c3565b34801561026757600080fd5b506101e261027636600461190a565b60026020526000908152604090205481565b34801561029457600080fd5b506101a56102a33660046119b9565b610b14565b3480156102b457600080fd5b506101e26102c3366004611a24565b610cda565b3480156102d457600080fd5b506101e27f71f3d55856e4058ed06ee057d79ada615f65cdf5f9ee88181b914225088f834f81565b34801561030857600080fd5b5061022661031736600461190a565b610d73565b34801561032857600080fd5b5061033c610337366004611a6f565b610da3565b604080516001600160601b039590951685526001600160a01b0393841660208601529190921690830152606082015260800161017c565b34801561037f57600080fd5b5061022661038e36600461190a565b610e02565b34801561039f57600080fd5b506101e260055481565b3480156103b557600080fd5b506103c96103c4366004611869565b610e9c565b60405161017c9190611a91565b3480156103e257600080fd5b506101706103f136600461193f565b61118f565b34801561040257600080fd5b506101e2600081565b34801561041757600080fd5b506101a56104263660046119b9565b6111b8565b34801561043757600080fd5b506101a5610446366004611b0a565b6112e5565b34801561045757600080fd5b506101e2610466366004611b93565b6114b1565b34801561047757600080fd5b5061022661048636600461193f565b611550565b34801561049757600080fd5b506101a56104a6366004611b0a565b611575565b3480156104b757600080fd5b506101e26104c636600461190a565b60036020526000908152604090205481565b60006001600160e01b03198216637965db0b60e01b148061050957506301ffc9a760e01b6001600160e01b03198316145b92915050565b60606000805b858110156105a05760008888888481811061053257610532611bfa565b90506020020160208101906105479190611c10565b604051602001610558929190611c2b565b60408051601f1981840301815291815281516020928301206000818152600190935291205490915061058a9084611c61565b925050808061059890611c74565b915050610515565b508084106105c35760408051600080825260208201909252905b50915050610757565b82816105cf8287611c61565b11156105e2576105df8583611ca3565b90505b806001600160401b038111156105fa576105fa611c8d565b604051908082528060200260200182016040528015610623578160200160208202803683370190505b50925060008060005b888110801561063a57508382105b156107515760008b8b8b8481811061065457610654611bfa565b90506020020160208101906106699190611c10565b60405160200161067a929190611c2b565b60408051601f19818403018152918152815160209283012060008181526001909352908220909250905b8154811080156106b357508685105b1561073b578a861061071b578181815481106106d1576106d1611bfa565b600091825260209091206003909102015489516001600160601b03909116908a908790811061070257610702611bfa565b60209081029190910101528461071781611c74565b9550505b8561072581611c74565b965050808061073390611c74565b9150506106a4565b505050808061074990611c74565b91505061062c565b50505050505b95945050505050565b60008281526020819052604090206001015461077b816116a6565b61078583836116b3565b50505050565b6001600160a01b03811633146107b45760405163334bd91960e11b815260040160405180910390fd5b6107be8282611745565b505050565b6004543410156108125760405162461bcd60e51b815260206004820152601560248201527454697020616d6f756e7420697320746f6f206c6f7760581b60448201526064015b60405180910390fd5b8334146108615760405162461bcd60e51b815260206004820152601f60248201527f53656e742076616c756520646f65736e2774206d6174636820616d6f756e74006044820152606401610809565b60006064600554866108739190611cb6565b61087d9190611ccd565b9050600061088b8287611ca3565b6040519091506001600160a01b0386169083156108fc029084906000818181858888f193505050501580156108c4573d6000803e3d6000fd5b506040516001600160a01b0388169082156108fc029083906000818181858888f193505050501580156108fb573d6000803e3d6000fd5b5060008386604051602001610911929190611c2b565b604051602081830303815290604052805190602001209050600160008281526020019081526020016000206040518060800160405280896001600160601b03168152602001886001600160a01b03168152602001336001600160a01b0316815260200187815250908060018154018082558091505060019003906000526020600020906003020160009091909190915060008201518160000160006101000a8154816001600160601b0302191690836001600160601b03160217905550602082015181600001600c6101000a8154816001600160a01b0302191690836001600160a01b0316021790555060408201518160010160006101000a8154816001600160a01b0302191690836001600160a01b0316021790555060608201518160020155505086600260008381526020019081526020016000206000828254610a579190611c61565b9091555050604051600090610a76908790339088908b90602001611cef565b60405160208183030381529060405280519060200120905087600360008381526020019081526020016000206000828254610ab19190611c61565b909155505060408051898152602081018790529081018790526001600160a01b0380891691908b169033907f5cdb0f7813a64a2caf6aa7559b9945cf37cef9897be2aed5e0edad7ae4fdab019060600160405180910390a4505050505050505050565b6060838214610b5e5760405162461bcd60e51b8152602060048201526016602482015275082e4e4c2f2e640d8cadccee8d040dad2e6dac2e8c6d60531b6044820152606401610809565b6000846001600160401b03811115610b7857610b78611c8d565b604051908082528060200260200182016040528015610ba1578160200160208202803683370190505b50905060005b85811015610cd05760005b858583818110610bc457610bc4611bfa565b9050602002810190610bd69190611d16565b9050811015610cbd576000888884818110610bf357610bf3611bfa565b90506020020135878785818110610c0c57610c0c611bfa565b9050602002810190610c1e9190611d16565b84818110610c2e57610c2e611bfa565b9050602002016020810190610c439190611c10565b604051602001610c54929190611c2b565b6040516020818303038152906040528051906020012090506002600082815260200190815260200160002054848481518110610c9257610c92611bfa565b60200260200101818151610ca69190611c61565b905250819050610cb581611c74565b915050610bb2565b5080610cc881611c74565b915050610ba7565b5095945050505050565b600080805b83811015610d6a57600086868684818110610cfc57610cfc611bfa565b9050602002016020810190610d119190611c10565b604051602001610d22929190611c2b565b60408051601f19818403018152918152815160209283012060008181526002909352912054909150610d549084611c61565b9250508080610d6290611c74565b915050610cdf565b50949350505050565b7f71f3d55856e4058ed06ee057d79ada615f65cdf5f9ee88181b914225088f834f610d9d816116a6565b50600455565b60016020528160005260406000208181548110610dbf57600080fd5b60009182526020909120600390910201805460018201546002909201546001600160601b03821694506001600160a01b03600160601b9092048216935091169084565b7f71f3d55856e4058ed06ee057d79ada615f65cdf5f9ee88181b914225088f834f610e2c816116a6565b60018210158015610e3e575060148211155b610e965760405162461bcd60e51b8152602060048201526024808201527f4665652070657263656e74206d757374206265206265747765656e203120616e6044820152630642032360e41b6064820152608401610809565b50600555565b60606000805b85811015610f2d57600088888884818110610ebf57610ebf611bfa565b9050602002016020810190610ed49190611c10565b604051602001610ee5929190611c2b565b60408051601f19818403018152918152815160209283012060008181526001909352912054909150610f179084611c61565b9250508080610f2590611c74565b915050610ea2565b50808410610f875760408051600080825260208201909252906105ba565b604080516080810182526000808252602080830182905292820181905260608201528252600019909201910181610f4b57905050915050610757565b8281610f938287611c61565b1115610fa657610fa38583611ca3565b90505b6000816001600160401b03811115610fc057610fc0611c8d565b60405190808252806020026020018201604052801561101257816020015b604080516080810182526000808252602080830182905292820181905260608201528252600019909201910181610fde5790505b50905060008060005b898110801561102957508482105b1561117f5760008c8c8c8481811061104357611043611bfa565b90506020020160208101906110589190611c10565b604051602001611069929190611c2b565b60408051601f19818403018152918152815160209283012060008181526001909352908220909250905b8154811080156110a257508785105b15611169578b8610611149578181815481106110c0576110c0611bfa565b600091825260209182902060408051608081018252600390930290910180546001600160601b03811684526001600160a01b03600160601b9091048116948401949094526001810154909316908201526002909101546060820152875188908790811061112f5761112f611bfa565b6020026020010181905250848061114590611c74565b9550505b8561115381611c74565b965050808061116190611c74565b915050611093565b505050808061117790611c74565b91505061101b565b50919a9950505050505050505050565b6000918252602082815260408084206001600160a01b0393909316845291905290205460ff1690565b60606000846001600160401b038111156111d4576111d4611c8d565b6040519080825280602002602001820160405280156111fd578160200160208202803683370190505b50905060005b85811015610cd05760005b848110156112d257600088888481811061122a5761122a611bfa565b9050602002013587878481811061124357611243611bfa565b90506020020160208101906112589190611c10565b604051602001611269929190611c2b565b60405160208183030381529060405280519060200120905060026000828152602001908152602001600020548484815181106112a7576112a7611bfa565b602002602001018181516112bb9190611c61565b9052508190506112ca81611c74565b91505061120e565b50806112dd81611c74565b915050611203565b606083821461132f5760405162461bcd60e51b8152602060048201526016602482015275082e4e4c2f2e640d8cadccee8d040dad2e6dac2e8c6d60531b6044820152606401610809565b6000846001600160401b0381111561134957611349611c8d565b604051908082528060200260200182016040528015611372578160200160208202803683370190505b50905060005b858110156114a55760005b85858381811061139557611395611bfa565b90506020028101906113a79190611d16565b90508110156114925760008a8a8a8a868181106113c6576113c6611bfa565b905060200201358989878181106113df576113df611bfa565b90506020028101906113f19190611d16565b8681811061140157611401611bfa565b90506020020160208101906114169190611c10565b6040516020016114299493929190611cef565b604051602081830303815290604052805190602001209050600360008281526020019081526020016000205484848151811061146757611467611bfa565b6020026020010181815161147b9190611c61565b90525081905061148a81611c74565b915050611383565b508061149d81611c74565b915050611378565b50979650505050505050565b600080805b838110156115455760008888888888868181106114d5576114d5611bfa565b90506020020160208101906114ea9190611c10565b6040516020016114fd9493929190611cef565b60408051601f1981840301815291815281516020928301206000818152600390935291205490915061152f9084611c61565b925050808061153d90611c74565b9150506114b6565b509695505050505050565b60008281526020819052604090206001015461156b816116a6565b6107858383611745565b60606000846001600160401b0381111561159157611591611c8d565b6040519080825280602002602001820160405280156115ba578160200160208202803683370190505b50905060005b858110156114a55760005b848110156116935760008a8a8a8a868181106115e9576115e9611bfa565b9050602002013589898681811061160257611602611bfa565b90506020020160208101906116179190611c10565b60405160200161162a9493929190611cef565b604051602081830303815290604052805190602001209050600360008281526020019081526020016000205484848151811061166857611668611bfa565b6020026020010181815161167c9190611c61565b90525081905061168b81611c74565b9150506115cb565b508061169e81611c74565b9150506115c0565b6116b081336117b0565b50565b60006116bf838361118f565b61173d576000838152602081815260408083206001600160a01b03861684529091529020805460ff191660011790556116f53390565b6001600160a01b0316826001600160a01b0316847f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a4506001610509565b506000610509565b6000611751838361118f565b1561173d576000838152602081815260408083206001600160a01b0386168085529252808320805460ff1916905551339286917ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9190a4506001610509565b6117ba828261118f565b6117e95760405163e2517d3f60e01b81526001600160a01b038216600482015260248101839052604401610809565b5050565b6000602082840312156117ff57600080fd5b81356001600160e01b03198116811461181757600080fd5b9392505050565b60008083601f84011261183057600080fd5b5081356001600160401b0381111561184757600080fd5b6020830191508360208260051b850101111561186257600080fd5b9250929050565b60008060008060006080868803121561188157600080fd5b8535945060208601356001600160401b0381111561189e57600080fd5b6118aa8882890161181e565b9699909850959660408101359660609091013595509350505050565b6020808252825182820181905260009190848201906040850190845b818110156118fe578351835292840192918401916001016118e2565b50909695505050505050565b60006020828403121561191c57600080fd5b5035919050565b80356001600160a01b038116811461193a57600080fd5b919050565b6000806040838503121561195257600080fd5b8235915061196260208401611923565b90509250929050565b600080600080600060a0868803121561198357600080fd5b61198c86611923565b9450602086013593506119a160408701611923565b94979396509394606081013594506080013592915050565b600080600080604085870312156119cf57600080fd5b84356001600160401b03808211156119e657600080fd5b6119f28883890161181e565b90965094506020870135915080821115611a0b57600080fd5b50611a188782880161181e565b95989497509550505050565b600080600060408486031215611a3957600080fd5b8335925060208401356001600160401b03811115611a5657600080fd5b611a628682870161181e565b9497909650939450505050565b60008060408385031215611a8257600080fd5b50508035926020909101359150565b602080825282518282018190526000919060409081850190868401855b82811015611afd57815180516001600160601b03168552868101516001600160a01b03908116888701528682015116868601526060908101519085015260809093019290850190600101611aae565b5091979650505050505050565b60008060008060008060808789031215611b2357600080fd5b86359550611b3360208801611923565b945060408701356001600160401b0380821115611b4f57600080fd5b611b5b8a838b0161181e565b90965094506060890135915080821115611b7457600080fd5b50611b8189828a0161181e565b979a9699509497509295939492505050565b600080600080600060808688031215611bab57600080fd5b85359450611bbb60208701611923565b93506040860135925060608601356001600160401b03811115611bdd57600080fd5b611be98882890161181e565b969995985093965092949392505050565b634e487b7160e01b600052603260045260246000fd5b600060208284031215611c2257600080fd5b61181782611923565b91825260601b6bffffffffffffffffffffffff1916602082015260340190565b634e487b7160e01b600052601160045260246000fd5b8082018082111561050957610509611c4b565b600060018201611c8657611c86611c4b565b5060010190565b634e487b7160e01b600052604160045260246000fd5b8181038181111561050957610509611c4b565b808202811582820484141761050957610509611c4b565b600082611cea57634e487b7160e01b600052601260045260246000fd5b500490565b9384526001600160a01b039283166020850152604084019190915216606082015260800190565b6000808335601e19843603018112611d2d57600080fd5b8301803591506001600160401b03821115611d4757600080fd5b6020019150600581901b360382131561186257600080fdfea26469706673582212206e29d186e03c2fd7d1caff5bbea6b58cb1095caf08118e34ffe3264f686ca78c64736f6c63430008140033",
+  "devdoc": {
+    "details": "Uses AccessControl for moderator/admin permissions.",
+    "errors": {
+      "AccessControlBadConfirmation()": [
+        {
+          "details": "The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}."
+        }
+      ],
+      "AccessControlUnauthorizedAccount(address,bytes32)": [
+        {
+          "details": "The `account` is missing a role."
+        }
+      ]
+    },
+    "events": {
+      "RoleAdminChanged(bytes32,bytes32,bytes32)": {
+        "details": "Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted to signal this."
+      },
+      "RoleGranted(bytes32,address,address)": {
+        "details": "Emitted when `account` is granted `role`. `sender` is the account that originated the contract call. This account bears the admin role (for the granted role). Expected in cases where the role was granted using the internal {AccessControl-_grantRole}."
+      },
+      "RoleRevoked(bytes32,address,address)": {
+        "details": "Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)"
+      },
+      "Tip(address,address,uint256,address,bytes32,bytes32)": {
+        "params": {
+          "amount": "The total amount tipped.",
+          "feeRecipient": "The address receiving the fee.",
+          "recipient": "The address receiving the tip.",
+          "recipientCommentCid": "The comment CID of the recipient.",
+          "sender": "The address sending the tip.",
+          "senderCommentCid": "The comment CID of the sender (0x0 if none)."
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "params": {
+          "_admin": "The address to be granted DEFAULT_ADMIN_ROLE.",
+          "_feePercent": "The fee percentage (between 1 and 20).",
+          "_minimumTipAmount": "The minimum tip amount (in wei)."
+        }
+      },
+      "getRoleAdmin(bytes32)": {
+        "details": "Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}."
+      },
+      "getSenderTipsTotalAmount(bytes32,address,bytes32,address[])": {
+        "params": {
+          "feeRecipients": "The list of fee recipient addresses.",
+          "recipientCommentCid": "The comment CID of the recipient.",
+          "sender": "The address of the tip sender.",
+          "senderCommentCid": "The comment CID from the sender (0x0 if none)."
+        },
+        "returns": {
+          "_0": "total The total amount tipped by the sender for these parameters."
+        }
+      },
+      "getSenderTipsTotalAmounts(bytes32,address,bytes32[],address[][])": {
+        "params": {
+          "feeRecipients": "Array of arrays of fee recipient addresses.",
+          "recipientCommentCids": "Array of recipient comment CIDs.",
+          "sender": "The address of the tip sender.",
+          "senderCommentCid": "The comment CID from the sender (0x0 if none)."
+        },
+        "returns": {
+          "_0": "totals Array of total amounts for each recipient comment."
+        }
+      },
+      "getSenderTipsTotalAmountsSameFeeRecipients(bytes32,address,bytes32[],address[])": {
+        "params": {
+          "feeRecipients": "Array of fee recipient addresses.",
+          "recipientCommentCids": "Array of recipient comment CIDs.",
+          "sender": "The address of the tip sender.",
+          "senderCommentCid": "The comment CID from the sender (0x0 if none)."
+        },
+        "returns": {
+          "_0": "totals Array of total amounts for each recipient comment."
+        }
+      },
+      "getTips(bytes32,address[],uint256,uint256)": {
+        "params": {
+          "feeRecipients": "The list of fee recipient addresses.",
+          "limit": "The maximum number of results to return.",
+          "offset": "The starting index for pagination.",
+          "recipientCommentCid": "The comment CID of the recipient."
+        },
+        "returns": {
+          "_0": "result Array of TipData structs."
+        }
+      },
+      "getTipsAmounts(bytes32,address[],uint256,uint256)": {
+        "params": {
+          "feeRecipients": "The list of fee recipient addresses.",
+          "limit": "The maximum number of results to return.",
+          "offset": "The starting index for pagination.",
+          "recipientCommentCid": "The comment CID of the recipient."
+        },
+        "returns": {
+          "amounts": "Array of tip amounts."
+        }
+      },
+      "getTipsTotalAmount(bytes32,address[])": {
+        "params": {
+          "feeRecipients": "The list of fee recipient addresses.",
+          "recipientCommentCid": "The comment CID of the recipient."
+        },
+        "returns": {
+          "_0": "total The total amount tipped for the given parameters."
+        }
+      },
+      "getTipsTotalAmounts(bytes32[],address[][])": {
+        "params": {
+          "feeRecipients": "Array of arrays of fee recipient addresses.",
+          "recipientCommentCids": "Array of recipient comment CIDs."
+        },
+        "returns": {
+          "_0": "totals Array of total amounts for each recipient comment."
+        }
+      },
+      "getTipsTotalAmountsSameFeeRecipients(bytes32[],address[])": {
+        "params": {
+          "feeRecipients": "Array of fee recipient addresses.",
+          "recipientCommentCids": "Array of recipient comment CIDs."
+        },
+        "returns": {
+          "_0": "totals Array of total amounts for each recipient comment."
+        }
+      },
+      "grantRole(bytes32,address)": {
+        "details": "Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event."
+      },
+      "hasRole(bytes32,address)": {
+        "details": "Returns `true` if `account` has been granted `role`."
+      },
+      "renounceRole(bytes32,address)": {
+        "details": "Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event."
+      },
+      "revokeRole(bytes32,address)": {
+        "details": "Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event."
+      },
+      "setFeePercent(uint256)": {
+        "details": "Only callable by accounts with MODERATOR_ROLE. Must be between 1 and 20.",
+        "params": {
+          "_feePercent": "The new fee percentage."
+        }
+      },
+      "setMinimumTipAmount(uint256)": {
+        "details": "Only callable by accounts with MODERATOR_ROLE.",
+        "params": {
+          "_minimumTipAmount": "The new minimum tip amount (in wei)."
+        }
+      },
+      "supportsInterface(bytes4)": {
+        "details": "Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[ERC section] to learn more about how these ids are created. This function call must use less than 30 000 gas."
+      },
+      "tip(address,uint256,address,bytes32,bytes32)": {
+        "details": "The tip is tracked by both recipient and sender comment CIDs.",
+        "params": {
+          "amount": "The total amount to tip (must match msg.value).",
+          "feeRecipient": "The address to receive the fee.",
+          "recipient": "The address to receive the tip.",
+          "recipientCommentCid": "The comment CID of the recipient.",
+          "senderCommentCid": "Optional comment CID from the sender (0x0 if none)."
+        }
+      }
+    },
+    "title": "PlebbitTippingV1",
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "Tip(address,address,uint256,address,bytes32,bytes32)": {
+        "notice": "Emitted when a tip is sent."
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "MODERATOR_ROLE()": {
+        "notice": "Role identifier for moderators."
+      },
+      "constructor": {
+        "notice": "Contract constructor."
+      },
+      "feePercent()": {
+        "notice": "The fee percentage (between 1 and 20). Can be changed by a moderator."
+      },
+      "getSenderTipsTotalAmount(bytes32,address,bytes32,address[])": {
+        "notice": "Get the total amount tipped by a sender for a given sender comment, recipient comment, and fee recipients."
+      },
+      "getSenderTipsTotalAmounts(bytes32,address,bytes32[],address[][])": {
+        "notice": "Get the total amounts tipped by a sender for multiple recipient comments and fee recipients."
+      },
+      "getSenderTipsTotalAmountsSameFeeRecipients(bytes32,address,bytes32[],address[])": {
+        "notice": "Get the total amounts tipped by a sender for multiple recipient comments, using the same fee recipients for each."
+      },
+      "getTips(bytes32,address[],uint256,uint256)": {
+        "notice": "Get the TipData structs for a recipient comment and fee recipients, with pagination."
+      },
+      "getTipsAmounts(bytes32,address[],uint256,uint256)": {
+        "notice": "Get the amounts of individual tips for a recipient comment and fee recipients, with pagination."
+      },
+      "getTipsTotalAmount(bytes32,address[])": {
+        "notice": "Get the total amount tipped for a recipient comment and a list of fee recipients."
+      },
+      "getTipsTotalAmounts(bytes32[],address[][])": {
+        "notice": "Get the total amounts tipped for multiple recipient comments and fee recipients."
+      },
+      "getTipsTotalAmountsSameFeeRecipients(bytes32[],address[])": {
+        "notice": "Get the total amounts tipped for multiple recipient comments, using the same fee recipients for each."
+      },
+      "minimumTipAmount()": {
+        "notice": "The minimum allowed tip amount (in wei). Can be changed by a moderator."
+      },
+      "senderTipsTotalAmounts(bytes32)": {
+        "notice": "Maps (senderCommentCid, sender, recipientCommentCid, feeRecipient) to the total amount tipped by sender."
+      },
+      "setFeePercent(uint256)": {
+        "notice": "Set the fee percentage."
+      },
+      "setMinimumTipAmount(uint256)": {
+        "notice": "Set the minimum allowed tip amount."
+      },
+      "tip(address,uint256,address,bytes32,bytes32)": {
+        "notice": "Send a tip to a recipient, with a portion going to a fee recipient."
+      },
+      "tips(bytes32,uint256)": {
+        "notice": "Maps (recipientCommentCid, feeRecipient) to an array of tips."
+      },
+      "tipsTotalAmounts(bytes32)": {
+        "notice": "Maps (recipientCommentCid, feeRecipient) to the total amount tipped."
+      }
+    },
+    "notice": "A contract for tipping users with ETH, supporting fee recipients and comment-based tracking.",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 27,
+        "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+        "label": "_roles",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_bytes32,t_struct(RoleData)22_storage)"
+      },
+      {
+        "astId": 468,
+        "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+        "label": "tips",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_bytes32,t_array(t_struct(TipData)461_storage)dyn_storage)"
+      },
+      {
+        "astId": 473,
+        "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+        "label": "tipsTotalAmounts",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "astId": 478,
+        "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+        "label": "senderTipsTotalAmounts",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "astId": 481,
+        "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+        "label": "minimumTipAmount",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 484,
+        "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+        "label": "feePercent",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_uint256"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_struct(TipData)461_storage)dyn_storage": {
+        "base": "t_struct(TipData)461_storage",
+        "encoding": "dynamic_array",
+        "label": "struct PlebbitTippingV1.TipData[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_array(t_struct(TipData)461_storage)dyn_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct PlebbitTippingV1.TipData[])",
+        "numberOfBytes": "32",
+        "value": "t_array(t_struct(TipData)461_storage)dyn_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RoleData)22_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct AccessControl.RoleData)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RoleData)22_storage"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(RoleData)22_storage": {
+        "encoding": "inplace",
+        "label": "struct AccessControl.RoleData",
+        "members": [
+          {
+            "astId": 19,
+            "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+            "label": "hasRole",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_bool)"
+          },
+          {
+            "astId": 21,
+            "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+            "label": "adminRole",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_struct(TipData)461_storage": {
+        "encoding": "inplace",
+        "label": "struct PlebbitTippingV1.TipData",
+        "members": [
+          {
+            "astId": 454,
+            "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+            "label": "amount",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint96"
+          },
+          {
+            "astId": 456,
+            "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+            "label": "feeRecipient",
+            "offset": 12,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 458,
+            "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+            "label": "sender",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "astId": 460,
+            "contract": "contracts/PlebbitTippingV1.sol:PlebbitTippingV1",
+            "label": "senderCommentCid",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint96": {
+        "encoding": "inplace",
+        "label": "uint96",
+        "numberOfBytes": "12"
+      }
+    }
+  }
+}
