@@ -6,7 +6,13 @@ node_modules
 /cache
 /artifacts
 /deployments
+contracts/cache/
+contracts/artifacts/
 
+js-api/test/dist/
+js-api/dist
+js-api/dist
+js-api/dist
 
 # TypeChain files
 /typechain

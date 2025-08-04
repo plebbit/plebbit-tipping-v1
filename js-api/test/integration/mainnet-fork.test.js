@@ -1,5 +1,14 @@
-const { PlebbitTippingV1 } = require('../dist/plebbitTippingV1');
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+import { PlebbitTippingV1 } from '../../dist/plebbitTippingV1.js';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure dotenv
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const cache = { maxAge: 60000 };
@@ -43,8 +52,8 @@ async function runMainnetForkTests() {
 
     // Test comment creation and caching
     console.log('\n💬 Testing comment functionality...');
-    const recipientCommentCid = 'QmTestMainnetForkRecipientCid';
-    const senderCommentCid = 'QmTestMainnetForkSenderCid';
+    const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+    const senderCommentCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
     const feeRecipients = [process.env.ADMIN_ADDRESS];
 
     const comment = await plebbitTipping.createComment({

@@ -1,15 +1,44 @@
 import { ethers } from "ethers";
-import * as multiformats from "multiformats";
-import { abi as PlebbitTippingV1Abi } from "./PlebbitTippingV1.json";
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+import PlebbitTippingV1Json from "./PlebbitTippingV1.json";
+const PlebbitTippingV1Abi = PlebbitTippingV1Json.abi;
+import CID from "cids";
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+interface BulkRequest {
+  feeRecipients: string[];
+  recipientCommentCid: string;
+  resolve: (value: any) => void;
+  reject: (error: any) => void;
+}
 
 class PlebbitTippingV1Instance {
   private contract: ethers.Contract;
-  private commentsCache: Record<string, any> = {};
-  private senderCommentsCache: Record<string, any> = {};
   private rpcUrls: string[];
   private cache: { maxAge: number };
-  private defaultFeeRecipient: string = process.env.ADMIN_ADDRESS || "0x7CC17990FE944919Aa6b91AA576CEBf1E9454749"; // from .env or fallback
+  private defaultFeeRecipient: string = process.env.ADMIN_ADDRESS || "0x7CC17990FE944919Aa6b91AA576CEBf1E9454749";
+  
+  // Debouncing infrastructure
+  private debouncedBulkCalls: Map<string, NodeJS.Timeout> = new Map();
+  private pendingBulkRequests: Map<string, BulkRequest[]> = new Map();
+  
+  // Public cache access for testing
+  public comments: Record<string, any> = {};
+  public senderComments: Record<string, any> = {};
+  
+  // Cache expiration
+  private cacheExpirationTimers: Map<string, NodeJS.Timeout> = new Map();
+  
+  // Mocking for testing
+  private mockBulkCallCount: number = 0;
 
   constructor(rpcUrls: string[], cache: { maxAge: number }, contractAddress: string) {
     this.rpcUrls = rpcUrls;
@@ -18,15 +47,22 @@ class PlebbitTippingV1Instance {
     this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, provider);
   }
 
-  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender?: string }) {
-    // For now, we'll use a simple string to bytes32 conversion instead of IPFS CID parsing
-    const cidBytes = ethers.encodeBytes32String(recipientCommentCid);
+  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { 
+    feeRecipients: string[], 
+    recipientCommentCid: string, 
+    senderCommentCid?: string, 
+    sender?: string 
+  }) {
+    // Convert CIDs to bytes32 format
+    const recipientCidBytes = ethers.keccak256(new CID(recipientCommentCid).bytes);
+    const senderCidBytes = senderCommentCid ? ethers.keccak256(new CID(senderCommentCid).bytes) : ethers.ZeroHash;
+    
     const tipTx = await this.contract.tip(
       sender || ethers.ZeroAddress,
       ethers.parseEther("0.01"),  // example amount
       feeRecipients[0],
-      senderCommentCid ? ethers.encodeBytes32String(senderCommentCid) : ethers.ZeroHash,
-      cidBytes,
+      senderCidBytes,
+      recipientCidBytes,
       { from: sender }
     );
 
@@ -42,34 +78,173 @@ class PlebbitTippingV1Instance {
     };
   }
 
-  async createComment({ feeRecipients, recipientCommentCid }: { feeRecipients: string[], recipientCommentCid: string }) {
-    const cacheKey = `${feeRecipients.join()}:${recipientCommentCid}`;
+  async createComment({ feeRecipients, recipientCommentCid }: { 
+    feeRecipients: string[], 
+    recipientCommentCid: string 
+  }) {
+    // Create comprehensive cache key
+    const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
 
-    if (!this.commentsCache[cacheKey]) {
-      this.commentsCache[cacheKey] = {
-        tipsTotalAmount: await this.getTipsTotalAmount(feeRecipients, recipientCommentCid)
+    if (!this.comments[cacheKey]) {
+      // Use debounced bulk call for tips total amount
+      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
+      
+      this.comments[cacheKey] = {
+        tipsTotalAmount,
+        feeRecipients,
+        recipientCommentCid
       };
 
-      setTimeout(() => delete this.commentsCache[cacheKey], 60000);
+      // Set up cache expiration using cache.maxAge
+      this.setupCacheExpiration(cacheKey);
     }
 
     const self = this;
     return {
-      tipsTotalAmount: this.commentsCache[cacheKey].tipsTotalAmount,
+      tipsTotalAmount: this.comments[cacheKey].tipsTotalAmount,
       async updateTipsTotalAmount() {
-        self.commentsCache[cacheKey].tipsTotalAmount = await self.getTipsTotalAmount(feeRecipients, recipientCommentCid);
+        const newAmount = await self.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
+        self.comments[cacheKey].tipsTotalAmount = newAmount;
+        return newAmount;
       }
     };
   }
 
-  async createSenderComment({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender: string }) {
-    const comment = await this.createComment({ feeRecipients, recipientCommentCid });
-    return { ...comment };
+  async createSenderComment({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { 
+    feeRecipients: string[], 
+    recipientCommentCid: string, 
+    senderCommentCid?: string, 
+    sender: string 
+  }) {
+    // Create comprehensive cache key for sender comments
+    const cacheKey = this.createSenderCacheKey(feeRecipients, recipientCommentCid, senderCommentCid, sender);
+
+    if (!this.senderComments[cacheKey]) {
+      const comment = await this.createComment({ feeRecipients, recipientCommentCid });
+      
+      this.senderComments[cacheKey] = {
+        ...comment,
+        senderCommentCid,
+        sender
+      };
+
+      // Set up cache expiration using cache.maxAge
+      this.setupCacheExpiration(cacheKey, true);
+    }
+
+    return this.senderComments[cacheKey];
+  }
+
+  private createCacheKey(feeRecipients: string[], recipientCommentCid: string): string {
+    return `comment:${feeRecipients.sort().join(',')}:${recipientCommentCid}`;
+  }
+
+  private createSenderCacheKey(feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender?: string): string {
+    return `sender:${feeRecipients.sort().join(',')}:${recipientCommentCid}:${senderCommentCid || ''}:${sender || ''}`;
+  }
+
+  private setupCacheExpiration(cacheKey: string, isSenderComment: boolean = false) {
+    // Clear existing timer if any
+    if (this.cacheExpirationTimers.has(cacheKey)) {
+      clearTimeout(this.cacheExpirationTimers.get(cacheKey)!);
+    }
+
+    // Set new expiration timer using cache.maxAge
+    const timer = setTimeout(() => {
+      if (isSenderComment) {
+        delete this.senderComments[cacheKey];
+      } else {
+        delete this.comments[cacheKey];
+      }
+      this.cacheExpirationTimers.delete(cacheKey);
+    }, this.cache.maxAge);
+
+    this.cacheExpirationTimers.set(cacheKey, timer);
+  }
+
+  private async getDebouncedTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<any> {
+    const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
+    
+    return new Promise((resolve, reject) => {
+      // Add request to pending bulk requests
+      if (!this.pendingBulkRequests.has(cacheKey)) {
+        this.pendingBulkRequests.set(cacheKey, []);
+      }
+      
+      this.pendingBulkRequests.get(cacheKey)!.push({
+        feeRecipients,
+        recipientCommentCid,
+        resolve,
+        reject
+      });
+
+      // Clear existing debounce timer
+      if (this.debouncedBulkCalls.has(cacheKey)) {
+        clearTimeout(this.debouncedBulkCalls.get(cacheKey)!);
+      }
+
+      // Set new debounce timer (100ms as specified)
+      const timer = setTimeout(async () => {
+        await this.executeBulkCall(cacheKey);
+      }, 100);
+
+      this.debouncedBulkCalls.set(cacheKey, timer);
+    });
+  }
+
+  private async executeBulkCall(cacheKey: string) {
+    const requests = this.pendingBulkRequests.get(cacheKey) || [];
+    if (requests.length === 0) return;
+
+    try {
+      // Increment mock counter for testing
+      this.mockBulkCallCount++;
+
+      // Extract unique requests to avoid duplicates
+      const uniqueRequests = this.deduplicateRequests(requests);
+      
+      if (uniqueRequests.length === 1) {
+        // Single request - use individual call
+        const request = uniqueRequests[0];
+        const result = await this.getTipsTotalAmount(request.feeRecipients, request.recipientCommentCid);
+        request.resolve(result);
+      } else {
+        // Multiple requests - use bulk call
+        const recipientCommentCids = uniqueRequests.map(r => r.recipientCommentCid);
+        const feeRecipientsArray = uniqueRequests.map(r => r.feeRecipients);
+        
+        const results = await this.contract.getTipsTotalAmounts(recipientCommentCids, feeRecipientsArray);
+        
+        // Resolve each request with corresponding result
+        uniqueRequests.forEach((request, index) => {
+          request.resolve(results[index]);
+        });
+      }
+    } catch (error) {
+      // Reject all pending requests on error
+      requests.forEach(request => request.reject(error));
+    } finally {
+      // Clean up
+      this.pendingBulkRequests.delete(cacheKey);
+      this.debouncedBulkCalls.delete(cacheKey);
+    }
+  }
+
+  private deduplicateRequests(requests: BulkRequest[]): BulkRequest[] {
+    const seen = new Set<string>();
+    return requests.filter(request => {
+      const key = `${request.feeRecipients.join(',')}:${request.recipientCommentCid}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string) {
-    const cidBytes = ethers.encodeBytes32String(recipientCommentCid);
-    const totalAmount = await this.contract.getTipsTotalAmount(cidBytes, feeRecipients);
+    const cidBytes = new CID(recipientCommentCid).bytes;
+    // Convert variable-length CID bytes to fixed 32-byte format
+    const cidBytes32 = ethers.keccak256(cidBytes);
+    const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, feeRecipients);
     return totalAmount;
   }
 
@@ -79,6 +254,18 @@ class PlebbitTippingV1Instance {
 
   async getMinimumTipAmount() {
     return await this.contract.minimumTipAmount();
+  }
+
+  private getFeeRecipient(comment: any): string {
+    return comment.tipping?.eth?.feeRecipientAddress || this.defaultFeeRecipient;
+  }
+
+  public getMockBulkCallCount(): number { 
+    return this.mockBulkCallCount; 
+  }
+
+  public resetMockBulkCallCount(): void {
+    this.mockBulkCallCount = 0;
   }
 }
 

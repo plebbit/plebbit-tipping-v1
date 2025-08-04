@@ -6,10 +6,10 @@ A decentralized tipping system with smart contracts and JavaScript/TypeScript AP
 
 ```
 plebbit-tipping-v1/
-├── contracts/          # Smart contracts (Solidity + Hardhat)
+├── contracts/         # Smart contracts (Solidity + Hardhat)
 ├── js-api/            # JavaScript/TypeScript API
 ├── package.json       # Root build scripts
-└── README.md         # This file
+└── README.md          # This file
 ```
 
 ## Deployed Contracts

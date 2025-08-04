@@ -86,9 +86,64 @@ npm test
 npm run dev
 ```
 
+## Quick Start (Localhost Testing)
+
+Want to test the js-api locally? Follow these simple steps:
+
+### Option 1: Automatic Deployment (Recommended)
+
+The `hardhat-deploy` plugin automatically deploys contracts when you start the node:
+
+1. **Start local blockchain** (contracts deploy automatically on localhost):
+   ```bash
+   cd contracts
+   npx hardhat node
+   ```
+
+2. **Run the js-api tests**:
+   ```bash
+   cd js-api
+   npm run build
+   node test/simple.test.js
+   ```
+
+### Option 2: Manual Deployment
+
+If you prefer to control deployment manually:
+
+1. **Start local blockchain** (without auto-deployment):
+   ```bash
+   cd contracts
+   npx hardhat node --no-deploy
+   ```
+
+2. **Deploy the smart contract** (in a new terminal):
+   ```bash
+   cd contracts
+   npx hardhat run deploy/00_deploy_contract.js --network localhost
+   ```
+
+3. **Run the js-api tests**:
+   ```bash
+   cd js-api
+   npm run build
+   node test/simple.test.js
+   ```
+
+That's it! Your local testing environment is ready.
+
+**Note**: The contract will be deployed at the same address (`0x49753cB4ff375e04D2BC2A64971F60cD1a091381`) in both cases due to deterministic deployment.
+
 ## Testing
 
 We have a comprehensive test suite that validates the JS API and smart contracts across different environments. Run tests in the following sequence to ensure everything is working correctly:
+
+### Test Types
+
+- **Unit Tests** (`npm test`): Fast, mocked tests for development
+- **Integration Tests** (`npm run test:integration`): Basic blockchain integration
+- **Mainnet Fork Tests** (`npm run test:fork`): Comprehensive production-like testing
+- **All Tests** (`npm run test:all`): Complete test suite
 
 ### 1. Basic Localhost Testing
 
@@ -110,7 +165,7 @@ First, test against a local Hardhat network with deployed contracts:
    ```bash
    cd js-api
    npm run build
-   node test/simple.test.js
+   npm run test:unit
    ```
 
 This validates:
@@ -119,16 +174,7 @@ This validates:
 - Comment creation and caching
 - Environment variable loading
 
-### 2. TypeScript Tests
-
-Run the TypeScript version of the tests:
-
-```bash
-cd js-api
-npx ts-node test/plebbitTippingV1.test.ts
-```
-
-### 3. Mainnet Fork Testing
+### 2. Mainnet Fork Testing
 
 Test against real Ethereum mainnet state using a fork:
 
@@ -161,7 +207,7 @@ Test against real Ethereum mainnet state using a fork:
 3. **Run comprehensive mainnet fork tests**:
    ```bash
    cd js-api
-   node test/mainnet-fork.test.js
+   node test/integration/mainnet-fork.test.js
    ```
 
 This comprehensive test:
@@ -183,10 +229,10 @@ npm run test:fork
 
 For complete validation, run tests in this order:
 
-1. `node test/simple.test.js` - Basic localhost functionality
-2. `npx ts-node test/plebbitTippingV1.test.ts` - TypeScript compatibility
-3. `node test/mainnet-fork.test.js` - Mainnet fork comprehensive testing
-4. `npm run test:fork` (from contracts/) - Contract-level fork tests
+1. `npm test` - Unit tests (fast, no blockchain needed)
+2. `npm run test:integration` - Integration tests (requires local blockchain)
+3. `npm run test:fork` - Mainnet fork tests (requires mainnet fork)
+4. `npm run test:all` - Run all tests in sequence
 
 ### Benefits of This Testing Approach
 

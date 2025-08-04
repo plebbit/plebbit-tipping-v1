@@ -3,22 +3,51 @@
   "version": "1.0.0",
   "description": "JavaScript/TypeScript API for PlebbitTippingV1 smart contract",
   "main": "dist/index.js",
+  "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
     "prebuild": "cp ../contracts/artifacts/contracts/PlebbitTippingV1.sol/PlebbitTippingV1.json src/",
     "build": "tsc",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "npm run test:unit",
+    "test:unit": "node --experimental-vm-modules ../node_modules/.bin/jest test/unit/",
+    "test:fork": "node test/integration/mainnet-fork.test.js",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:watch": "node --experimental-vm-modules ../node_modules/.bin/jest test/unit/ --watch",
     "lint": "eslint src/**/*.ts",
     "prepare": "npm run build",
     "dev": "npm run prebuild && tsc --watch"
   },
-  "keywords": ["plebbit", "tipping", "ethereum", "blockchain"],
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "extensionsToTreatAsEsm": [".ts"],
+    "testEnvironment": "node",
+    "globals": {
+      "ts-jest": {
+        "useESM": true
+      }
+    },
+    "testMatch": [
+      "<rootDir>/test/unit/**/*.test.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/test/dist/",
+      "<rootDir>/test/integration/"
+    ],
+    "moduleDirectories": ["node_modules", "dist"],
+    "moduleFileExtensions": ["js", "json", "ts"]
+  },
+  "keywords": [
+    "plebbit",
+    "tipping",
+    "ethereum",
+    "blockchain"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "ethers": "^6.14.0",
-    "multiformats": "^13.0.0"
+    "cids": "^1.1.9",
+    "ethers": "^6.14.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
