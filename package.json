@@ -25,12 +25,26 @@
     "verify:amoy": "cd contracts && npm run verify:amoy",
     "verify:baseSepolia": "cd contracts && npm run verify:baseSepolia",
     "install:all": "cd contracts && npm install && cd ../js-api && npm install",
-    "clean": "rm -rf contracts/node_modules js-api/node_modules contracts/dist js-api/dist contracts/artifacts contracts/cache"
+    "clean": "rm -rf contracts/node_modules js-api/node_modules contracts/dist js-api/dist contracts/artifacts contracts/cache",
+    "publish:js-api": "cd js-api && npm publish --access public"
   },
   "keywords": ["plebbit", "tipping", "ethereum", "blockchain", "solidity", "typescript"],
   "author": "",
   "license": "MIT",
   "engines": {
     "node": ">=20.19.0"
-  }
+  },
+  "main": "js-api/dist/index.js",
+  "types": "js-api/dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./js-api/dist/index.js",
+      "require": "./js-api/dist/index.js",
+      "types": "./js-api/dist/index.d.ts"
+    }
+  },
+  "files": [
+    "js-api/dist/**/*",
+    "js-api/README.md"
+  ]
 }
