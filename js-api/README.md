@@ -40,20 +40,197 @@ console.log('Tips total amount:', comment.tipsTotalAmount);
 await comment.updateTipsTotalAmount();
 ```
 
+## Architecture
+
+The JS-API implements intelligent caching and debouncing to optimize blockchain calls and improve performance. Here's how the data flows:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   JS-API        │    │   Smart Contract │
+│                 │    │                 │    │                 │
+│ createComment() │───▶│ Cache Layer     │───▶│ getTipsTotal    │
+│                 │    │ - comments[]    │    │ Amount()        │
+│ updateTips()    │───▶│ - senderComments│    │                 │
+│                 │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              ▲
+                              │
+                              │ updateTipsTotalAmount()
+                              │ forces fresh call
+```
+
+### Caching Strategy
+
+- **First call**: Makes blockchain call and caches result
+- **Subsequent calls**: Uses cached value (no blockchain call)
+- **Manual refresh**: `updateTipsTotalAmount()` bypasses cache for fresh data
+- **Automatic expiration**: Cache expires after `cache.maxAge` milliseconds
+
+### Debouncing & Bulk Optimization
+
+The API uses intelligent debouncing to batch multiple requests and optimize blockchain calls:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Multiple      │    │   Debounce      │    │   Smart         │
+│   Requests      │───▶│   Layer         │───▶│   Contract      │
+│   (100ms)       │    │   - 100ms delay │    │   - Bulk calls  │
+│                 │    │   - Deduplication│    │   - Single tx   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+**How it works:**
+1. **Multiple rapid requests** (within 100ms) are collected
+2. **Deduplication** removes duplicate requests
+3. **Bulk call** to smart contract with all unique requests
+4. **Single transaction** instead of multiple individual calls
+
+**Example scenario:**
+```javascript
+// These 3 calls happen within 100ms
+const comment1 = await plebbitTipping.createComment({...}); // Request 1
+const comment2 = await plebbitTipping.createComment({...}); // Request 2  
+const comment3 = await plebbitTipping.createComment({...}); // Request 3
+
+// Result: Only 1 blockchain call instead of 3!
+// All 3 comments get their data from the same bulk call
+```
+
+
 ## API Reference
 
 ### PlebbitTippingV1
 
 #### Constructor Options
 
-- `rpcUrls: string[]` - Array of RPC URLs to connect to
+- `rpcUrls: string[]` - Array of RPC URLs to connect to (only the first is used currently)
 - `cache?: { maxAge: number }` - Optional caching configuration
+  - `maxAge`: Cache expiration time in milliseconds (default: 60000ms)
 
 #### Methods
 
 - `createTip(options)` - Create a new tip transaction
 - `createComment(options)` - Create a comment instance for tip tracking
 - `createSenderComment(options)` - Create a sender comment instance for tip tracking
+- `getFeePercent()` - Get the fee percentage from the smart contract
+- `getMinimumTipAmount()` - Get the minimum tip amount from the smart contract
+
+### Options Interfaces
+
+#### TipOptions
+```typescript
+interface TipOptions {
+  feeRecipients: string[];        // Array of fee recipient addresses
+  recipientCommentCid: string;     // CID of the comment being tipped
+  senderCommentCid?: string;       // Optional CID of the sender's comment
+  sender?: string;                 // Optional sender address
+}
+```
+
+#### CommentOptions
+```typescript
+interface CommentOptions {
+  feeRecipients: string[];        // Array of fee recipient addresses
+  recipientCommentCid: string;     // CID of the comment to track
+}
+```
+
+#### SenderCommentOptions
+```typescript
+interface SenderCommentOptions {
+  feeRecipients: string[];        // Array of fee recipient addresses
+  recipientCommentCid: string;     // CID of the comment being tipped
+  senderCommentCid?: string;       // Optional CID of the sender's comment
+  sender: string;                  // Sender address
+}
+```
+
+### Detailed Method Documentation
+
+#### `createTip(options)`
+Creates a new tip transaction. The tip amount is currently hardcoded to 0.01 ETH.
+
+**Parameters:**
+- `options: TipOptions` - Tip configuration
+
+**Returns:**
+- `Promise<Tip>` - Tip object with send method
+
+**Example:**
+```javascript
+const tip = await plebbitTippingV1.createTip({
+  feeRecipients: ['0x1234...'],
+  recipientCommentCid: 'QmXyz...',
+  senderCommentCid: 'QmAbc...',  // optional
+  sender: '0x5678...'            // optional
+});
+
+const result = await tip.send();
+console.log('Transaction hash:', result.transactionHash);
+```
+
+#### `createComment(options)`
+Creates a comment instance for tracking tip amounts. Uses intelligent caching to optimize blockchain calls.
+
+**Parameters:**
+- `options: CommentOptions` - Comment configuration
+
+**Returns:**
+- `Promise<Comment>` - Comment object with tip tracking methods
+
+**Example:**
+```javascript
+const comment = await plebbitTippingV1.createComment({
+  feeRecipients: ['0x1234...'],
+  recipientCommentCid: 'QmXyz...'
+});
+
+console.log('Current tips:', comment.tipsTotalAmount);
+await comment.updateTipsTotalAmount(); // Force refresh
+```
+
+#### `createSenderComment(options)`
+Creates a sender-specific comment instance for tip tracking. Extends the basic comment functionality with sender information.
+
+**Parameters:**
+- `options: SenderCommentOptions` - Sender comment configuration
+
+**Returns:**
+- `Promise<SenderComment>` - Sender comment object with tip tracking methods
+
+**Example:**
+```javascript
+const senderComment = await plebbitTippingV1.createSenderComment({
+  feeRecipients: ['0x1234...'],
+  recipientCommentCid: 'QmXyz...',
+  senderCommentCid: 'QmAbc...',  // optional
+  sender: '0x5678...'
+});
+```
+
+#### `getFeePercent()`
+Retrieves the fee percentage from the smart contract.
+
+**Returns:**
+- `Promise<bigint>` - Fee percentage as a bigint
+
+**Example:**
+```javascript
+const feePercent = await plebbitTippingV1.getFeePercent();
+console.log('Fee percentage:', feePercent.toString());
+```
+
+#### `getMinimumTipAmount()`
+Retrieves the minimum tip amount from the smart contract.
+
+**Returns:**
+- `Promise<bigint>` - Minimum tip amount as a bigint
+
+**Example:**
+```javascript
+const minAmount = await plebbitTippingV1.getMinimumTipAmount();
+console.log('Minimum tip amount:', ethers.formatEther(minAmount), 'ETH');
+```
 
 ### Tip
 
@@ -68,10 +245,39 @@ Methods:
 ### Comment / SenderComment
 
 Properties:
-- `tipsTotalAmount` - Total amount of tips received
+- `tipsTotalAmount` - Total amount of tips received (cached)
 
 Methods:
-- `updateTipsTotalAmount()` - Refresh the tips total amount
+- `updateTipsTotalAmount()` - Refresh the tips total amount (bypasses cache)
+
+### Network Support
+
+The API automatically detects the contract address based on the RPC URL:
+
+- **Localhost**: `0x49753cB4ff375e04D2BC2A64971F60cD1a091381`
+- **Sepolia**: `0x49753cB4ff375e04D2BC2A64971F60cD1a091381`
+- **Polygon Amoy**: `0x49753cB4ff375e04D2BC2A64971F60cD1a091381`
+- **Base Sepolia**: `0x49753cB4ff375e04D2BC2A64971F60cD1a091381`
+
+### Error Handling
+
+All methods return promises that may reject with the following error types:
+- **Contract errors**: When smart contract calls fail
+- **Network errors**: When RPC connections fail
+- **Validation errors**: When invalid parameters are provided
+- **CID errors**: When invalid CIDs are provided
+
+**Example error handling:**
+```javascript
+try {
+  const comment = await plebbitTippingV1.createComment({
+    feeRecipients: ['0x1234...'],
+    recipientCommentCid: 'QmXyz...'
+  });
+} catch (error) {
+  console.error('Failed to create comment:', error.message);
+}
+```
 
 ## Development
 
