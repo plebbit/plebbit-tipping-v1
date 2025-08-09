@@ -17,6 +17,7 @@
     "build": "tsc",
     "test": "npm run test:unit",
     "test:unit": "node --experimental-vm-modules ../node_modules/.bin/jest test/unit/",
+    "test:integration": "node test/integration/mainnet-fork.test.js",
     "test:fork": "node test/integration/mainnet-fork.test.js",
     "test:all": "npm run test:unit && npm run test:integration",
     "test:watch": "node --experimental-vm-modules ../node_modules/.bin/jest test/unit/ --watch",

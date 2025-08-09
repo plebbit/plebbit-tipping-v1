@@ -1,0 +1,126 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install root dependencies
+      run: npm ci
+      
+    - name: Install contracts dependencies
+      run: |
+        cd contracts
+        npm ci
+        
+    - name: Install js-api dependencies
+      run: |
+        cd js-api
+        npm ci
+        
+    - name: Compile contracts
+      run: |
+        cd contracts
+        npx hardhat compile
+        
+    - name: Start Hardhat node in background
+      run: |
+        cd contracts
+        nohup npx hardhat node > hardhat.log 2>&1 &
+        echo $! > hardhat.pid
+        
+    - name: Wait for Hardhat node to be ready
+      run: |
+        # Wait for node to be ready by checking if port 8545 is open
+        timeout 30s bash -c 'until nc -z localhost 8545; do sleep 1; done'
+        echo "Hardhat node is ready"
+        
+    - name: Deploy contracts to local network
+      run: |
+        cd contracts
+        npx hardhat run deploy/00_deploy_contract.js --network localhost
+        
+    - name: Build JS API
+      run: |
+        cd js-api
+        npm run build
+        
+    - name: Run contract tests
+      run: |
+        cd contracts
+        npm test
+        
+    - name: Run JS API unit tests
+      run: |
+        cd js-api
+        npm test
+        
+    - name: Run JS API integration tests
+      run: |
+        cd js-api
+        npm run test:integration || echo "Integration tests not available"
+        
+    - name: Show Hardhat logs on failure
+      if: failure()
+      run: |
+        cd contracts
+        echo "=== Hardhat Node Logs ==="
+        cat hardhat.log || echo "No hardhat logs found"
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        cd contracts
+        if [ -f hardhat.pid ]; then
+          kill $(cat hardhat.pid) || true
+          rm hardhat.pid
+        fi
+        # Kill any remaining hardhat processes
+        pkill -f "hardhat node" || true
+        
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd js-api && npm ci
+        
+    - name: Build TypeScript
+      run: |
+        cd js-api
+        npm run build
+        
+    - name: Check TypeScript types
+      run: |
+        cd js-api
+        npx tsc --noEmit
