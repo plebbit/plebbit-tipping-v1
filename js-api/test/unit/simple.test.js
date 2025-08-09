@@ -1,4 +1,5 @@
 import { PlebbitTippingV1 } from '../../dist/plebbitTippingV1.js';
+import { createTestWallet, getFirstHardhatAccount } from '../utils/testWallet.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -68,5 +69,80 @@ describe('PlebbitTippingV1', () => {
       console.log('Sender comment created successfully');
       expect(senderComment).toBeDefined();
     });
+  });
+
+  describe('Transaction tests with funded wallet', () => {
+    let testWalletInfo;
+    let plebbitTippingWithSigner;
+
+    beforeAll(async () => {
+      // Create and fund a test wallet
+      testWalletInfo = await createTestWallet(rpcUrl, '5.0');
+      await testWalletInfo.fundWallet();
+      
+      // Verify funding
+      const balance = await testWalletInfo.getBalance();
+      console.log(`Test wallet balance: ${balance} ETH`);
+      expect(parseFloat(balance)).toBeGreaterThan(4); // Should have ~5 ETH minus gas
+      
+      // Create PlebbitTippingV1 instance with the funded wallet's private key
+      plebbitTippingWithSigner = await PlebbitTippingV1({ 
+        rpcUrls: [rpcUrl], 
+        cache,
+        privateKey: testWalletInfo.privateKey
+      });
+      console.log('PlebbitTippingV1 instance created with signer');
+    });
+
+    test('should create actual tip transaction', async () => {
+      const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const senderCommentCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
+      const feeRecipients = [testWalletInfo.funderAddress]; // Use the funder as fee recipient
+
+      console.log('Creating tip transaction...');
+      const result = await plebbitTippingWithSigner.createTip({
+        feeRecipients,
+        recipientCommentCid,
+        senderCommentCid,
+        sender: testWalletInfo.address // Use test wallet as sender
+      });
+
+      console.log('Sending transaction...');
+      const receipt = await result.send();
+      
+      console.log(`✅ Transaction successful! Hash: ${receipt.transactionHash}`);
+      expect(receipt.transactionHash).toBeDefined();
+      expect(receipt.receipt).toBeDefined();
+      expect(receipt.error).toBeUndefined();
+    }, 30000); // 30 second timeout for blockchain interaction
+
+    test('should work with first Hardhat account directly', async () => {
+      // Alternative approach: use first Hardhat account directly
+      const hardhatAccount = getFirstHardhatAccount();
+      
+      const plebbitTippingHardhat = await PlebbitTippingV1({
+        rpcUrls: [rpcUrl],
+        cache,
+        privateKey: hardhatAccount.privateKey
+      });
+
+      const recipientCommentCid = 'QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
+      const senderCommentCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
+      const feeRecipients = [hardhatAccount.address];
+
+      console.log('Creating tip with first Hardhat account...');
+      const result = await plebbitTippingHardhat.createTip({
+        feeRecipients,
+        recipientCommentCid,
+        senderCommentCid,
+        sender: hardhatAccount.address
+      });
+
+      const receipt = await result.send();
+      console.log(`✅ Hardhat account transaction successful! Hash: ${receipt.transactionHash}`);
+      
+      expect(receipt.transactionHash).toBeDefined();
+      expect(receipt.receipt).toBeDefined();
+    }, 30000);
   });
 });

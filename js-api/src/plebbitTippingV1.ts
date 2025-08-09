@@ -30,11 +30,19 @@ class PlebbitTippingV1Instance {
   // Mocking for testing
   private mockBulkCallCount: number = 0;
 
-  constructor(rpcUrls: string[], cache: { maxAge: number }, contractAddress: string) {
+  constructor(rpcUrls: string[], cache: { maxAge: number }, contractAddress: string, privateKey?: string) {
     this.rpcUrls = rpcUrls;
     this.cache = cache;
     const provider = new ethers.JsonRpcProvider(rpcUrls[0]);
-    this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, provider);
+    
+    if (privateKey) {
+      // Create wallet with private key for transaction signing
+      const wallet = new ethers.Wallet(privateKey, provider);
+      this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, wallet);
+    } else {
+      // Read-only provider for queries only
+      this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, provider);
+    }
   }
 
   async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { 
@@ -47,13 +55,17 @@ class PlebbitTippingV1Instance {
     const recipientCidBytes = ethers.keccak256(CID.parse(recipientCommentCid).bytes);
     const senderCidBytes = senderCommentCid ? ethers.keccak256(CID.parse(senderCommentCid).bytes) : ethers.ZeroHash;
     
+    // Get minimum tip amount from contract and use a higher amount
+    const minTipAmount = await this.contract.minimumTipAmount();
+    const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
+    
     const tipTx = await this.contract.tip(
       sender || ethers.ZeroAddress,
-      ethers.parseEther("0.01"),  // example amount
+      tipAmount,
       feeRecipients[0],
       senderCidBytes,
       recipientCidBytes,
-      { from: sender }
+      { from: sender, value: tipAmount } // Add value to the transaction
     );
 
     return {
@@ -268,10 +280,14 @@ const DEFAULT_CONTRACT_ADDRESSES: Record<string, string> = {
 };
 
 // Factory function matching the requirements
-export async function PlebbitTippingV1({ rpcUrls, cache }: { rpcUrls: string[], cache: { maxAge: number } }) {
+export async function PlebbitTippingV1({ rpcUrls, cache, privateKey }: { 
+  rpcUrls: string[], 
+  cache: { maxAge: number },
+  privateKey?: string 
+}) {
   // Use first RPC URL to determine contract address
   const contractAddress = DEFAULT_CONTRACT_ADDRESSES[rpcUrls[0]] || DEFAULT_CONTRACT_ADDRESSES["http://127.0.0.1:8545"];
   
-  return new PlebbitTippingV1Instance(rpcUrls, cache, contractAddress);
+  return new PlebbitTippingV1Instance(rpcUrls, cache, contractAddress, privateKey);
 }
 

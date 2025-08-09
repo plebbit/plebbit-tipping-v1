@@ -167,11 +167,13 @@ describe('PlebbitTippingV1', () => {
       const recipientCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
       const senderCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
       
-      // Mock the contract.tip method
+      // Mock the contract methods
       const mockTip = jest.fn().mockResolvedValue({
         wait: jest.fn().mockResolvedValue({ hash: '0x123' })
       });
+      const mockMinimumTipAmount = jest.fn().mockResolvedValue(1000000000000000n); // 0.001 ETH
       plebbitTipping.contract.tip = mockTip;
+      plebbitTipping.contract.minimumTipAmount = mockMinimumTipAmount;
 
       await plebbitTipping.createTip({
         feeRecipients: ['0x123'],
@@ -182,11 +184,11 @@ describe('PlebbitTippingV1', () => {
 
       expect(mockTip).toHaveBeenCalledWith(
         '0x456',
-        expect.any(BigInt), // parseEther returns BigInt, not Object
+        expect.any(BigInt), // tipAmount (BigInt)
         '0x123',
         expect.any(String), // CID hash (hex string)
         expect.any(String), // CID hash (hex string)
-        { from: '0x456' }
+        { from: '0x456', value: expect.any(BigInt) } // Added value parameter
       );
     });
   });

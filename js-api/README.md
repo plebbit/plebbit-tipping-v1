@@ -10,34 +10,76 @@ npm install @plebbit/tipping-v1
 
 ## Usage
 
+The library operates in two modes depending on whether you provide a private key:
+
+| Mode | Private Key | Capabilities | Use Cases |
+|------|-------------|--------------|-----------|
+| **Read-Only** | ❌ Not provided | `createComment()`, `getFeePercent()`, `getMinimumTipAmount()` | Displaying tip amounts, contract info |
+| **Transaction** | ✅ Required | All read-only + `createTip()` transactions | Sending tips, full functionality |
+
+### Basic Setup (Read-Only)
+
+For reading tip amounts and contract data (no transactions):
+
 ```javascript
 import { PlebbitTippingV1 } from '@plebbit/tipping-v1';
 
-// Initialize the API
+// Initialize the API (read-only mode)
 const plebbitTippingV1 = await PlebbitTippingV1({
   rpcUrls: ['https://your-rpc-url.com'],
   cache: { maxAge: 60000 }
+  // No privateKey = read-only mode
 });
-
-// Create and send a tip
-const tip = await plebbitTippingV1.createTip({
-  feeRecipients: ['0x...'],
-  recipientCommentCid: 'QmXyz...',
-  senderCommentCid: 'QmAbc...',
-  sender: '0x...'
-});
-
-await tip.send();
-console.log('Transaction hash:', tip.transactionHash);
 
 // Get tip amounts for a comment
 const comment = await plebbitTippingV1.createComment({
-  feeRecipients: ['0x...'],
-  recipientCommentCid: 'QmXyz...'
+  feeRecipients: ['0x1234567890abcdef1234567890abcdef12345678'],
+  recipientCommentCid: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG'
 });
 
-console.log('Tips total amount:', comment.tipsTotalAmount);
-await comment.updateTipsTotalAmount();
+console.log('Tips total amount:', comment.tipsTotalAmount.toString());
+await comment.updateTipsTotalAmount(); // Force refresh from blockchain
+```
+
+### Transaction Setup (With Private Key)
+
+For creating actual tip transactions, you need to provide a private key:
+
+```javascript
+import { PlebbitTippingV1 } from '@plebbit/tipping-v1';
+
+// Initialize with private key for transactions
+const plebbitTippingV1 = await PlebbitTippingV1({
+  rpcUrls: ['https://your-rpc-url.com'],
+  cache: { maxAge: 60000 },
+  privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' // Your wallet's private key
+});
+
+// Create and send a tip transaction
+const tip = await plebbitTippingV1.createTip({
+  feeRecipients: ['0x1234567890abcdef1234567890abcdef12345678'],
+  recipientCommentCid: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
+  senderCommentCid: 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY', // optional
+  sender: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'      // optional
+});
+
+const result = await tip.send();
+console.log('✅ Transaction successful!');
+console.log('Transaction hash:', result.transactionHash);
+console.log('Block number:', result.receipt.blockNumber);
+```
+
+### Environment Variables (Recommended)
+
+
+```javascript
+const PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+const plebbitTippingV1 = await PlebbitTippingV1({
+  rpcUrls: [process.env.RPC_URL],
+  cache: { maxAge: 60000 },
+  privateKey: PRIVATE_KEY // Secure private key loading
+});
 ```
 
 ## Architecture
@@ -106,6 +148,10 @@ const comment3 = await plebbitTipping.createComment({...}); // Request 3
 - `rpcUrls: string[]` - Array of RPC URLs to connect to (only the first is used currently)
 - `cache?: { maxAge: number }` - Optional caching configuration
   - `maxAge`: Cache expiration time in milliseconds (default: 60000ms)
+- `privateKey?: string` - Optional private key for transaction signing
+  - **Required for**: `createTip()` transactions
+  - **Not needed for**: Read-only operations like `createComment()`, `getFeePercent()`, etc.
+  - **Security**: Store in environment variables, never hardcode in source code
 
 #### Methods
 
@@ -148,7 +194,11 @@ interface SenderCommentOptions {
 ### Detailed Method Documentation
 
 #### `createTip(options)`
-Creates a new tip transaction. The tip amount is currently hardcoded to 0.01 ETH.
+Creates a new tip transaction. The tip amount is automatically set to 2x the contract's minimum tip amount to ensure the transaction succeeds.
+
+**Requirements:**
+- Requires `privateKey` to be set during initialization
+- Wallet must have sufficient ETH balance for the tip + gas fees
 
 **Parameters:**
 - `options: TipOptions` - Tip configuration
@@ -158,6 +208,12 @@ Creates a new tip transaction. The tip amount is currently hardcoded to 0.01 ETH
 
 **Example:**
 ```javascript
+// Requires privateKey in constructor
+const plebbitTippingV1 = await PlebbitTippingV1({
+  rpcUrls: ['https://your-rpc-url.com'],
+  privateKey: process.env.PRIVATE_KEY // Required!
+});
+
 const tip = await plebbitTippingV1.createTip({
   feeRecipients: ['0x1234...'],
   recipientCommentCid: 'QmXyz...',
@@ -166,7 +222,9 @@ const tip = await plebbitTippingV1.createTip({
 });
 
 const result = await tip.send();
+console.log('✅ Transaction successful!');
 console.log('Transaction hash:', result.transactionHash);
+console.log('Tip amount:', ethers.formatEther(result.tipAmount), 'ETH');
 ```
 
 #### `createComment(options)`
@@ -266,16 +324,26 @@ All methods return promises that may reject with the following error types:
 - **Network errors**: When RPC connections fail
 - **Validation errors**: When invalid parameters are provided
 - **CID errors**: When invalid CIDs are provided
+- **Wallet errors**: When private key is missing for transactions
+- **Insufficient funds**: When wallet doesn't have enough ETH
 
 **Example error handling:**
 ```javascript
 try {
-  const comment = await plebbitTippingV1.createComment({
+  const tip = await plebbitTippingV1.createTip({
     feeRecipients: ['0x1234...'],
     recipientCommentCid: 'QmXyz...'
   });
+  const result = await tip.send();
+  console.log('Success:', result.transactionHash);
 } catch (error) {
-  console.error('Failed to create comment:', error.message);
+  if (error.message.includes('insufficient funds')) {
+    console.error('Not enough ETH in wallet for tip + gas');
+  } else if (error.message.includes('private key')) {
+    console.error('Private key required for transactions');
+  } else {
+    console.error('Transaction failed:', error.message);
+  }
 }
 ```
 
@@ -310,7 +378,7 @@ The `hardhat-deploy` plugin automatically deploys contracts when you start the n
    ```bash
    cd js-api
    npm run build
-   node test/simple.test.js
+   npm test  # Includes both read-only and transaction tests
    ```
 
 ### Option 2: Manual Deployment
@@ -333,7 +401,7 @@ If you prefer to control deployment manually:
    ```bash
    cd js-api
    npm run build
-   node test/simple.test.js
+   npm test  # Includes both read-only and transaction tests
    ```
 
 That's it! Your local testing environment is ready.
