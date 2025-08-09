@@ -1,17 +1,7 @@
 import { ethers } from "ethers";
-import PlebbitTippingV1Json from "./PlebbitTippingV1.json";
+import PlebbitTippingV1Json from "./PlebbitTippingV1.json" with { type: "json" };
 const PlebbitTippingV1Abi = PlebbitTippingV1Json.abi;
-import CID from "cids";
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// ES module equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import { CID } from 'multiformats/cid';
 
 interface BulkRequest {
   feeRecipients: string[];
@@ -24,7 +14,7 @@ class PlebbitTippingV1Instance {
   private contract: ethers.Contract;
   private rpcUrls: string[];
   private cache: { maxAge: number };
-  private defaultFeeRecipient: string = process.env.ADMIN_ADDRESS || "0x7CC17990FE944919Aa6b91AA576CEBf1E9454749";
+  private defaultFeeRecipient: string = "0x0000000000000000000000000000000000000000";
   
   // Debouncing infrastructure
   private debouncedBulkCalls: Map<string, NodeJS.Timeout> = new Map();
@@ -54,8 +44,8 @@ class PlebbitTippingV1Instance {
     sender?: string 
   }) {
     // Convert CIDs to bytes32 format
-    const recipientCidBytes = ethers.keccak256(new CID(recipientCommentCid).bytes);
-    const senderCidBytes = senderCommentCid ? ethers.keccak256(new CID(senderCommentCid).bytes) : ethers.ZeroHash;
+    const recipientCidBytes = ethers.keccak256(CID.parse(recipientCommentCid).bytes);
+    const senderCidBytes = senderCommentCid ? ethers.keccak256(CID.parse(senderCommentCid).bytes) : ethers.ZeroHash;
     
     const tipTx = await this.contract.tip(
       sender || ethers.ZeroAddress,
@@ -241,7 +231,7 @@ class PlebbitTippingV1Instance {
   }
 
   private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string) {
-    const cidBytes = new CID(recipientCommentCid).bytes;
+    const cidBytes = CID.parse(recipientCommentCid).bytes;
     // Convert variable-length CID bytes to fixed 32-byte format
     const cidBytes32 = ethers.keccak256(cidBytes);
     const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, feeRecipients);

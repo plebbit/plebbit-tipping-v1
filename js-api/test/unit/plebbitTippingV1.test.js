@@ -13,7 +13,7 @@
 
 import { jest, describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from '@jest/globals';
 import { PlebbitTippingV1 } from '../../dist/plebbitTippingV1.js';
-import CID from 'cids';
+import { CID } from 'multiformats/cid';
 
 /**
  * @description Main test suite for PlebbitTippingV1 functionality
@@ -137,7 +137,7 @@ describe('PlebbitTippingV1', () => {
      */
     it('should parse IPFS CIDs correctly', async () => {
       const testCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
-      const parsedCid = new CID(testCid);
+      const parsedCid = CID.parse(testCid);
       expect(parsedCid.bytes).toBeDefined();
       expect(parsedCid.bytes.length).toBeGreaterThan(0);
     });

@@ -40,7 +40,7 @@ describe('PlebbitTippingV1', () => {
     test('should create comment with valid CID', async () => {
       // Use valid CID format (base58 encoded multihash)
       const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
-      const feeRecipients = [process.env.ADMIN_ADDRESS];
+      const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
 
       const comment = await plebbitTipping.createComment({
         feeRecipients,
@@ -56,13 +56,13 @@ describe('PlebbitTippingV1', () => {
       // Use valid CID format (base58 encoded multihash)
       const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
       const senderCommentCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
-      const feeRecipients = [process.env.ADMIN_ADDRESS];
+      const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
 
       const senderComment = await plebbitTipping.createSenderComment({
         feeRecipients,
         recipientCommentCid,
         senderCommentCid,
-        sender: process.env.ADMIN_ADDRESS,
+        sender: process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC',
       });
       
       console.log('Sender comment created successfully');
