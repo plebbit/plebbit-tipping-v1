@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, js-api ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, js-api ]
 
 jobs:
   build-and-test:
@@ -29,7 +29,7 @@ jobs:
     - name: Compile contracts
       run: |
         cd contracts
-        npm run compile
+        ./node_modules/.bin/hardhat compile
         
     - name: Build TypeScript
       run: |
