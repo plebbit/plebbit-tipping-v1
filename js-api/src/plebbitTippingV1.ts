@@ -30,42 +30,42 @@ class PlebbitTippingV1Instance {
   // Mocking for testing
   private mockBulkCallCount: number = 0;
 
-  constructor(rpcUrls: string[], cache: { maxAge: number }, contractAddress: string, privateKey?: string) {
+  constructor(rpcUrls: string[], cache: { maxAge: number }, contractAddress: string) {
     this.rpcUrls = rpcUrls;
     this.cache = cache;
     const provider = new ethers.JsonRpcProvider(rpcUrls[0]);
     
-    if (privateKey) {
-      // Create wallet with private key for transaction signing
-      const wallet = new ethers.Wallet(privateKey, provider);
-      this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, wallet);
-    } else {
-      // Read-only provider for queries only
-      this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, provider);
-    }
+    // Always create read-only contract for queries
+    this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, provider);
   }
 
-  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { 
+  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender, privateKey }: { 
     feeRecipients: string[], 
     recipientCommentCid: string, 
     senderCommentCid?: string, 
-    sender?: string 
+    sender?: string,
+    privateKey: string
   }) {
+    // Create a new provider and wallet with private key for this transaction
+    const provider = new ethers.JsonRpcProvider(this.rpcUrls[0]);
+    const wallet = new ethers.Wallet(privateKey, provider);
+    const contractWithSigner = new ethers.Contract(this.contract.target, PlebbitTippingV1Abi, wallet);
+    
     // Convert CIDs to bytes32 format
     const recipientCidBytes = ethers.keccak256(CID.parse(recipientCommentCid).bytes);
     const senderCidBytes = senderCommentCid ? ethers.keccak256(CID.parse(senderCommentCid).bytes) : ethers.ZeroHash;
     
     // Get minimum tip amount from contract and use a higher amount
-    const minTipAmount = await this.contract.minimumTipAmount();
+    const minTipAmount = await contractWithSigner.minimumTipAmount();
     const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
     
-    const tipTx = await this.contract.tip(
-      sender || ethers.ZeroAddress,
+    const tipTx = await contractWithSigner.tip(
+      sender || wallet.address, // Use wallet address if sender not provided
       tipAmount,
       feeRecipients[0],
       senderCidBytes,
       recipientCidBytes,
-      { from: sender, value: tipAmount } // Add value to the transaction
+      { from: sender || wallet.address, value: tipAmount } // Add value to the transaction
     );
 
     return {
@@ -280,14 +280,13 @@ const DEFAULT_CONTRACT_ADDRESSES: Record<string, string> = {
 };
 
 // Factory function matching the requirements
-export async function PlebbitTippingV1({ rpcUrls, cache, privateKey }: { 
+export async function PlebbitTippingV1({ rpcUrls, cache }: { 
   rpcUrls: string[], 
-  cache: { maxAge: number },
-  privateKey?: string 
+  cache: { maxAge: number }
 }) {
   // Use first RPC URL to determine contract address
   const contractAddress = DEFAULT_CONTRACT_ADDRESSES[rpcUrls[0]] || DEFAULT_CONTRACT_ADDRESSES["http://127.0.0.1:8545"];
   
-  return new PlebbitTippingV1Instance(rpcUrls, cache, contractAddress, privateKey);
+  return new PlebbitTippingV1Instance(rpcUrls, cache, contractAddress);
 }
 

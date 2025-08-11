@@ -28,8 +28,8 @@ jobs:
         
     - name: Compile contracts
       run: |
-        cd contracts
-        ./node_modules/.bin/hardhat compile
+        cd ..
+        npm run build:contracts
         
     - name: Build TypeScript
       run: |
