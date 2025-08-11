@@ -2,6 +2,7 @@ import { PlebbitTippingV1 } from '../../dist/plebbitTippingV1.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ethers } from 'ethers';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -12,6 +13,38 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const cache = { maxAge: 60000 };
+
+async function checkAndDeployContract() {
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const contractAddress = '0x49753cB4ff375e04D2BC2A64971F60cD1a091381';
+  
+  // Check if contract exists at the expected address
+  const code = await provider.getCode(contractAddress);
+  
+  if (code === '0x') {
+    console.log('📦 Contract not deployed, deploying now...');
+    
+    // Get the first account (Hardhat's default account 0)
+    const accounts = await provider.listAccounts();
+    const deployer = accounts[0];
+    
+    // Import the contract ABI and bytecode
+    const PlebbitTippingV1Json = await import('../../src/PlebbitTippingV1.json', { assert: { type: 'json' } });
+    const contractFactory = new ethers.ContractFactory(
+      PlebbitTippingV1Json.default.abi,
+      PlebbitTippingV1Json.default.bytecode,
+      await provider.getSigner(deployer)
+    );
+    
+    // Deploy the contract
+    const contract = await contractFactory.deploy();
+    await contract.waitForDeployment();
+    
+    console.log(`✅ Contract deployed at: ${await contract.getAddress()}`);
+  } else {
+    console.log('✅ Contract already deployed at expected address');
+  }
+}
 
 async function runMainnetForkTests() {
   try {
@@ -39,6 +72,9 @@ async function runMainnetForkTests() {
       console.log('✅ Confirmed: Running on mainnet fork');
     }
     
+    // Check and deploy contract if needed
+    await checkAndDeployContract();
+    
     const plebbitTipping = await PlebbitTippingV1({ rpcUrls: [rpcUrl], cache });
     console.log('✅ PlebbitTippingV1 instance created successfully');
 
@@ -54,7 +90,7 @@ async function runMainnetForkTests() {
     console.log('\n💬 Testing comment functionality...');
     const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
     const senderCommentCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
-    const feeRecipients = [process.env.ADMIN_ADDRESS];
+    const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
 
     const comment = await plebbitTipping.createComment({
       feeRecipients,
@@ -66,7 +102,7 @@ async function runMainnetForkTests() {
       feeRecipients,
       recipientCommentCid,
       senderCommentCid,
-      sender: process.env.ADMIN_ADDRESS,
+      sender: process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC',
     });
     console.log('✅ Sender comment created successfully');
 

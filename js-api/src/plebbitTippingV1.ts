@@ -12,6 +12,7 @@ interface BulkRequest {
 
 class PlebbitTippingV1Instance {
   private contract: ethers.Contract;
+  private contractAddress: string; // Store contract address separately
   private rpcUrls: string[];
   private cache: { maxAge: number };
   private defaultFeeRecipient: string = "0x0000000000000000000000000000000000000000";
@@ -33,6 +34,7 @@ class PlebbitTippingV1Instance {
   constructor(rpcUrls: string[], cache: { maxAge: number }, contractAddress: string) {
     this.rpcUrls = rpcUrls;
     this.cache = cache;
+    this.contractAddress = contractAddress; // Store the address
     const provider = new ethers.JsonRpcProvider(rpcUrls[0]);
     
     // Always create read-only contract for queries
@@ -49,7 +51,7 @@ class PlebbitTippingV1Instance {
     // Create a new provider and wallet with private key for this transaction
     const provider = new ethers.JsonRpcProvider(this.rpcUrls[0]);
     const wallet = new ethers.Wallet(privateKey, provider);
-    const contractWithSigner = new ethers.Contract(this.contract.target, PlebbitTippingV1Abi, wallet);
+    const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet); // Use stored address
     
     // Convert CIDs to bytes32 format
     const recipientCidBytes = ethers.keccak256(CID.parse(recipientCommentCid).bytes);

@@ -10,12 +10,12 @@ npm install @plebbit/tipping-v1
 
 ## Usage
 
-The library operates in two modes depending on whether you provide a private key:
+The library now operates in a simplified mode where private keys are only required when creating tip transactions:
 
-| Mode | Private Key | Capabilities | Use Cases |
-|------|-------------|--------------|-----------|
-| **Read-Only** | ❌ Not provided | `createComment()`, `getFeePercent()`, `getMinimumTipAmount()` | Displaying tip amounts, contract info |
-| **Transaction** | ✅ Required | All read-only + `createTip()` transactions | Sending tips, full functionality |
+| Operation | Private Key Required | Method |
+|-----------|---------------------|---------|
+| **Read-Only** | ❌ No | `createComment()`, `getFeePercent()`, `getMinimumTipAmount()` |
+| **Transactions** | ✅ Yes (in `createTip()`) | `createTip()` with `privateKey` parameter |
 
 ### Basic Setup (Read-Only)
 
@@ -28,7 +28,7 @@ import { PlebbitTippingV1 } from '@plebbit/tipping-v1';
 const plebbitTippingV1 = await PlebbitTippingV1({
   rpcUrls: ['https://your-rpc-url.com'],
   cache: { maxAge: 60000 }
-  // No privateKey = read-only mode
+  // No privateKey needed for read-only operations
 });
 
 // Get tip amounts for a comment
@@ -43,24 +43,25 @@ await comment.updateTipsTotalAmount(); // Force refresh from blockchain
 
 ### Transaction Setup (With Private Key)
 
-For creating actual tip transactions, you need to provide a private key:
+For creating actual tip transactions, provide the private key directly to the `createTip` method:
 
 ```javascript
 import { PlebbitTippingV1 } from '@plebbit/tipping-v1';
 
-// Initialize with private key for transactions
+// Initialize without private key (simplified setup)
 const plebbitTippingV1 = await PlebbitTippingV1({
   rpcUrls: ['https://your-rpc-url.com'],
-  cache: { maxAge: 60000 },
-  privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' // Your wallet's private key
+  cache: { maxAge: 60000 }
+  // No privateKey in constructor
 });
 
-// Create and send a tip transaction
+// Create and send a tip transaction with private key
 const tip = await plebbitTippingV1.createTip({
   feeRecipients: ['0x1234567890abcdef1234567890abcdef12345678'],
   recipientCommentCid: 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG',
   senderCommentCid: 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY', // optional
-  sender: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'      // optional
+  sender: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',      // optional
+  privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' // Required for transactions
 });
 
 const result = await tip.send();
@@ -71,14 +72,17 @@ console.log('Block number:', result.receipt.blockNumber);
 
 ### Environment Variables (Recommended)
 
-
 ```javascript
-const PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-
 const plebbitTippingV1 = await PlebbitTippingV1({
   rpcUrls: [process.env.RPC_URL],
-  cache: { maxAge: 60000 },
-  privateKey: PRIVATE_KEY // Secure private key loading
+  cache: { maxAge: 60000 }
+});
+
+// Use private key from environment when creating tips
+const tip = await plebbitTippingV1.createTip({
+  feeRecipients: ['0x1234...'],
+  recipientCommentCid: 'QmXyz...',
+  privateKey: process.env.PRIVATE_KEY // Secure private key loading
 });
 ```
 
@@ -523,3 +527,127 @@ Pin the fork to a specific block number for reproducible tests:
 ```bash
 FORK_BLOCK_NUMBER=18500000  # Optional: pin to specific block
 ```
+
+## How to Test the New Implementation
+
+### 1. **Quick Local Testing**
+
+```bash
+# From project root
+cd contracts
+npx hardhat node  # Start local blockchain
+
+# In another terminal
+cd js-api
+npm run build
+npm test  # This will run the updated tests
+```
+
+### 2. **Test the New API Pattern**
+
+Create a simple test script to verify the new behavior:
+
+```javascript
+// test-new-api.js
+import { PlebbitTippingV1 } from './dist/plebbitTippingV1.js';
+
+async function testNewAPI() {
+  // Create instance without private key
+  const plebbitTipping = await PlebbitTippingV1({
+    rpcUrls: ['http://127.0.0.1:8545'],
+    cache: { maxAge: 60000 }
+  });
+
+  console.log('✅ Instance created without private key');
+
+  // Test read-only operations
+  const feePercent = await plebbitTipping.getFeePercent();
+  console.log('✅ Read-only operation works:', feePercent.toString());
+
+  // Test transaction with private key (will fail without proper setup)
+  try {
+    const tip = await plebbitTipping.createTip({
+      feeRecipients: ['0x1234...'],
+      recipientCommentCid: 'QmXyz...',
+      privateKey: '0xinvalid' // This should fail
+    });
+  } catch (error) {
+    console.log('✅ Transaction properly requires valid private key');
+  }
+}
+
+testNewAPI();
+```
+
+### 3. **Run the Updated Test Suite**
+
+The tests have been updated to reflect the new API:
+
+```bash
+cd js-api
+npm test
+```
+
+This will run:
+- `simple.test.js` - Tests the new API pattern with private key in `createTip`
+- `plebbitTippingV1.test.js` - Unit tests for caching and other functionality
+
+### 4. **Verify the Changes Work**
+
+The key changes to verify:
+
+1. **Constructor no longer accepts `privateKey`**:
+   ```javascript
+   // ✅ This should work
+   const plebbitTipping = await PlebbitTippingV1({
+     rpcUrls: ['http://127.0.0.1:8545'],
+     cache: { maxAge: 60000 }
+   });
+
+   // ❌ This should fail (no longer supported)
+   const plebbitTipping = await PlebbitTippingV1({
+     rpcUrls: ['http://127.0.0.1:8545'],
+     cache: { maxAge: 60000 },
+     privateKey: '0x...' // This parameter no longer exists
+   });
+   ```
+
+2. **`createTip` now requires `privateKey`**:
+   ```javascript
+   // ✅ This should work
+   const tip = await plebbitTipping.createTip({
+     feeRecipients: ['0x1234...'],
+     recipientCommentCid: 'QmXyz...',
+     privateKey: '0x...' // Required parameter
+   });
+
+   // ❌ This should fail
+   const tip = await plebbitTipping.createTip({
+     feeRecipients: ['0x1234...'],
+     recipientCommentCid: 'QmXyz...'
+     // Missing privateKey will cause error
+   });
+   ```
+
+### 5. **Integration Testing**
+
+For full integration testing with actual transactions:
+
+```bash
+# Start local blockchain with funded accounts
+cd contracts
+npx hardhat node
+
+# In another terminal, run integration tests
+cd js-api
+npm run test:integration
+```
+
+## Summary of Changes
+
+1. **API Change**: `privateKey` moved from constructor to `createTip` method
+2. **Tests Updated**: All test files updated to reflect new API pattern
+3. **Documentation**: js-api/README.md needs complete rewrite for new API
+4. **Backward Compatibility**: This is a breaking change - clients need to update their code
+
+The main benefit is that clients no longer need to provide a private key when creating the instance, making the API more secure and flexible. The private key is only used when actually creating transactions.

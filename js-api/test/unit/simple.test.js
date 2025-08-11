@@ -85,13 +85,12 @@ describe('PlebbitTippingV1', () => {
       console.log(`Test wallet balance: ${balance} ETH`);
       expect(parseFloat(balance)).toBeGreaterThan(4); // Should have ~5 ETH minus gas
       
-      // Create PlebbitTippingV1 instance with the funded wallet's private key
+      // Create PlebbitTippingV1 instance (no private key needed in constructor)
       plebbitTippingWithSigner = await PlebbitTippingV1({ 
         rpcUrls: [rpcUrl], 
-        cache,
-        privateKey: testWalletInfo.privateKey
+        cache
       });
-      console.log('PlebbitTippingV1 instance created with signer');
+      console.log('PlebbitTippingV1 instance created');
     });
 
     test('should create actual tip transaction', async () => {
@@ -104,7 +103,8 @@ describe('PlebbitTippingV1', () => {
         feeRecipients,
         recipientCommentCid,
         senderCommentCid,
-        sender: testWalletInfo.address // Use test wallet as sender
+        sender: testWalletInfo.address, // Use test wallet as sender
+        privateKey: testWalletInfo.privateKey // Pass private key to createTip
       });
 
       console.log('Sending transaction...');
@@ -122,8 +122,7 @@ describe('PlebbitTippingV1', () => {
       
       const plebbitTippingHardhat = await PlebbitTippingV1({
         rpcUrls: [rpcUrl],
-        cache,
-        privateKey: hardhatAccount.privateKey
+        cache
       });
 
       const recipientCommentCid = 'QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
@@ -135,7 +134,8 @@ describe('PlebbitTippingV1', () => {
         feeRecipients,
         recipientCommentCid,
         senderCommentCid,
-        sender: hardhatAccount.address
+        sender: hardhatAccount.address,
+        privateKey: hardhatAccount.privateKey // Pass private key to createTip
       });
 
       const receipt = await result.send();
