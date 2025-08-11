@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "deploy": "npx hardhat run scripts/deploy.js",
+    "deploy": "npx hardhat run deploy/00_deploy_contract.js",
     "deploy:localhost": "npx hardhat deploy --network localhost",
     "deploy:all": "node scripts/deploy-all.js",
     "node": "npx hardhat node",
