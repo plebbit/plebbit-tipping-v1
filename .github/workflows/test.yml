@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: deployment  # Add this line to use the deployment environment
     
     strategy:
       matrix:
