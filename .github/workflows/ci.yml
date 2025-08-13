@@ -28,7 +28,6 @@ jobs:
         
     - name: Compile contracts
       run: |
-        cd ..
         npm run build:contracts
         
     - name: Build TypeScript
@@ -42,13 +41,53 @@ jobs:
         npm test
         
     - name: Start Hardhat node for integration tests
+      env:
+        ADMIN_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
       run: |
         cd contracts
-        npm run node &
-        sleep 10
+        
+        # Create .env file for deployment script
+        echo "ADMIN_ADDRESS=$ADMIN_ADDRESS" > .env
+        
+        # Start Hardhat node (without mainnet fork for CI speed)
+        echo "=== Starting Hardhat node ==="
+        nohup npx hardhat node --no-deploy --hostname 127.0.0.1 --port 8545 > hardhat.log 2>&1 &
+        
+        HARDHAT_PID=$!
+        echo $HARDHAT_PID > hardhat.pid
+        echo "Hardhat node started with PID: $HARDHAT_PID"
+        
+        # Wait for node to be ready (more robust than sleep 10)
+        echo "Waiting for node to be ready..."
+        timeout 60s bash -c 'until nc -z 127.0.0.1 8545; do
+          echo "Waiting for port 8545... $(date)"
+          sleep 2
+        done'
+        echo "Hardhat node is ready"
+        
+        # Deploy contracts
         npm run deploy:localhost
         
+        # Verify deployment
+        if [ -f "deployments/localhost/PlebbitTippingV1.json" ]; then
+          DEPLOYED_ADDRESS=$(grep -o '"address": "[^"]*"' deployments/localhost/PlebbitTippingV1.json | cut -d'"' -f4)
+          echo "✅ Contract deployed successfully at: $DEPLOYED_ADDRESS"
+        else
+          echo "❌ Deployment file not found"
+          exit 1
+        fi
+
     - name: Run JS API tests
       run: |
         cd js-api
         npm test
+
+    - name: Cleanup Hardhat processes
+      if: always()
+      run: |
+        cd contracts
+        if [ -f hardhat.pid ]; then
+          kill $(cat hardhat.pid) 2>/dev/null || true
+          rm hardhat.pid
+        fi
+        pkill -f "hardhat node" 2>/dev/null || true
