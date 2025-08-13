@@ -3,7 +3,7 @@
 [![CI](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/ci.yml/badge.svg)](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/ci.yml)
 [![Test Suite](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/test.yml/badge.svg)](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/test.yml)
 
-A decentralized tipping system with smart contracts and JavaScript/TypeScript API.
+The Plebbit tipping system includes the smart contract and the JavaScript/TypeScript API.
 
 ## Project Structure
 
