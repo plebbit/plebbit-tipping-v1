@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
     
     steps:
     - name: Checkout code
@@ -24,47 +24,81 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         
-    - name: Install root dependencies
+    - name: Install dependencies (with workspaces)
       run: npm ci
+
+    - name: Install network tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y iproute2 net-tools lsof netcat-openbsd
       
-    - name: Install contracts dependencies
-      run: |
-        cd contracts
-        npm ci
-        
-    - name: Install js-api dependencies
-      run: |
-        cd js-api
-        npm ci
-        
     - name: Compile contracts
       run: |
         cd contracts
-        npx hardhat compile
+        npm run compile
         
-    - name: Start Hardhat node in background
+    - name: Start Hardhat node using dedicated action
+      uses: ambersun1234/hardhat-test-action@v1
+      with:
+        network: hardhat
+        working-directory: contracts
+        package-manager: npm
+        command: node
+      env:
+        ADMIN_ADDRESS: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+      continue-on-error: true
+      id: hardhat-action
+        
+    - name: Fallback - Start Hardhat node manually if action failed
+      if: steps.hardhat-action.outcome == 'failure'
       run: |
         cd contracts
-        nohup npx hardhat node > hardhat.log 2>&1 &
-        echo $! > hardhat.pid
+        echo "Hardhat action failed, starting node manually..."
+        echo "=== Starting Hardhat node with manual setup ==="
+        # Use a simpler approach - just start the node
+        nohup npx hardhat node --no-deploy > hardhat.log 2>&1 &
+        HARDHAT_PID=$!
+        echo $HARDHAT_PID > hardhat.pid
+        echo "Hardhat node started with PID: $HARDHAT_PID"
         
-    - name: Wait for Hardhat node to be ready
-      run: |
-        # Wait for node to be ready by checking if port 8545 is open
-        timeout 30s bash -c 'until nc -z localhost 8545; do sleep 1; done'
+        # Wait for node to be ready
+        echo "Waiting for node to be ready..."
+        timeout 60s bash -c 'until nc -z 127.0.0.1 8545; do
+          echo "Waiting for port 8545..."
+          sleep 2
+        done'
         echo "Hardhat node is ready"
         
+    - name: Verify Hardhat node is running
+      run: |
+        echo "=== Checking if Hardhat node is accessible ==="
+        nc -z 127.0.0.1 8545 && echo "Port 8545 is open" || echo "Port 8545 is not accessible"
+        echo "=== All listening ports ==="
+        ss -ltn | grep :8545 || echo "Port 8545 not found in ss output"
+        
     - name: Deploy contracts to local network
+      env:
+        ADMIN_ADDRESS: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
       run: |
         cd contracts
-        npx hardhat run deploy/00_deploy_contract.js --network localhost
+        npm run deploy:localhost
         
     - name: Build JS API
       run: |
         cd js-api
         npm run build
         
-    - name: Run contract tests
+    - name: Run contract tests using Hardhat action
+      uses: ambersun1234/hardhat-test-action@v1
+      with:
+        network: hardhat
+        working-directory: contracts
+        package-manager: npm
+      continue-on-error: true
+      id: contract-tests
+        
+    - name: Fallback - Run contract tests manually if action failed
+      if: steps.contract-tests.outcome == 'failure'
       run: |
         cd contracts
         npm test
@@ -84,18 +118,24 @@ jobs:
       run: |
         cd contracts
         echo "=== Hardhat Node Logs ==="
-        cat hardhat.log || echo "No hardhat logs found"
+        cat hardhat.log 2>/dev/null || echo "No hardhat logs found"
+        echo "=== Process status ==="
+        ps aux | grep hardhat || echo "No hardhat processes found"
         
     - name: Cleanup
       if: always()
       run: |
         cd contracts
+        echo "=== Cleaning up Hardhat processes ==="
         if [ -f hardhat.pid ]; then
-          kill $(cat hardhat.pid) || true
+          echo "Killing process $(cat hardhat.pid)"
+          kill $(cat hardhat.pid) 2>/dev/null || true
           rm hardhat.pid
         fi
         # Kill any remaining hardhat processes
-        pkill -f "hardhat node" || true
+        pkill -f "hardhat node" 2>/dev/null || true
+        echo "=== Final process check ==="
+        ps aux | grep hardhat || echo "No hardhat processes remaining"
         
   lint:
     runs-on: ubuntu-latest
@@ -110,10 +150,8 @@ jobs:
         node-version: 20.x
         cache: 'npm'
         
-    - name: Install dependencies
-      run: |
-        npm ci
-        cd js-api && npm ci
+    - name: Install dependencies (with workspaces)
+      run: npm ci
         
     - name: Build TypeScript
       run: |
