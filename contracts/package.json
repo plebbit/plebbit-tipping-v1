@@ -1,0 +1,37 @@
+{
+  "name": "plebbit-tipping-v1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run deploy/00_deploy_contract.js",
+    "deploy:localhost": "npx hardhat deploy --network localhost",
+    "deploy:all": "node scripts/deploy-all.js",
+    "node": "npx hardhat node",
+    "node:fork": "npx hardhat node --fork $NETWORK_0 --no-deploy",
+    "test:fork": "MAINNET_RPC_URL=$MAINNET_RPC_URL npx hardhat test",
+    "verify:sepolia": "npx hardhat verify --network sepolia 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5",
+    "verify:amoy": "npx hardhat verify --network amoy 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5",
+    "verify:baseSepolia": "npx hardhat verify --network baseSepolia 0x49753cB4ff375e04D2BC2A64971F60cD1a091381 0x7CC17990FE944919Aa6b91AA576CEBf1E9454749 1000000000000000 5"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "hardhat": "^2.26.0",
+    "hardhat-deploy": "^1.0.4",
+    "semver": "^7.7.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "wait-on": "^8.0.3"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

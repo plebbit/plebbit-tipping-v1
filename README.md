@@ -1,6 +1,19 @@
 # Plebbit Tipping v1
 
-This is a Solidity smart contract project using Hardhat for a decentralized tipping system called `PlebbitTippingV1`.
+[![CI](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/ci.yml/badge.svg)](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/ci.yml)
+[![Test Suite](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/test.yml/badge.svg)](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/test.yml)
+
+The Plebbit tipping system includes the smart contract and the JavaScript/TypeScript API.
+
+## Project Structure
+
+```
+plebbit-tipping-v1/
+├── contracts/         # Smart contracts (Solidity + Hardhat)
+├── js-api/            # JavaScript/TypeScript API
+├── package.json       # Root build scripts
+└── README.md          # This file
+```
 
 ## Deployed Contracts
 
@@ -32,14 +45,14 @@ This is a Solidity smart contract project using Hardhat for a decentralized tipp
    cd plebbit-tipping-v1
    ```
 
-2. Install dependencies:
+2. Install dependencies for both contracts and js-api:
    ```bash
-   npm install
+   npm run install:all
    ```
 
-3. Compile the contract:
+3. Build everything (contracts + js-api):
    ```bash
-   npm run compile
+   npm run build
    ```
 
 ### Running Tests

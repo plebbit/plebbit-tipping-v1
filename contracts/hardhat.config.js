@@ -17,9 +17,20 @@ module.exports = {
     hardhat: {
       chainId: 1337,
       allowUnlimitedContractSize: true,
+      // Forking configuration (uncomment and set MAINNET_RPC_URL in .env to use)
+      ...(process.env.MAINNET_RPC_URL ? {
+        forking: {
+          url: process.env.MAINNET_RPC_URL,
+          blockNumber: process.env.FORK_BLOCK_NUMBER ? parseInt(process.env.FORK_BLOCK_NUMBER) : undefined
+        }
+      } : {}),
+      // Gas configuration for forked networks
+      initialBaseFeePerGas: 0, // Set to 0 for local testing to avoid high gas fees
     },
     localhost: {
       url: "http://127.0.0.1:8545",
+      // Gas configuration to handle high mainnet fees when forked
+      gasMultiplier: 2, // Multiply gas estimates by 2 for safety
     },
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID", // Set this in your .env
