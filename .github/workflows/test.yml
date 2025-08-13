@@ -45,7 +45,7 @@ jobs:
         package-manager: npm
         command: node
       env:
-        ADMIN_ADDRESS: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+        ADMIN_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
       continue-on-error: true
       id: hardhat-action
         
@@ -78,7 +78,7 @@ jobs:
         
     - name: Deploy contracts to local network
       env:
-        ADMIN_ADDRESS: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+        ADMIN_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
       run: |
         cd contracts
         npm run deploy:localhost
