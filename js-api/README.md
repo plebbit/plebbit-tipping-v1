@@ -92,7 +92,7 @@ The JS-API implements intelligent caching and debouncing to optimize blockchain 
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   JS-API        │    │   Smart Contract │
+│   Frontend      │    │   JS-API        │    │  Smart Contract │
 │                 │    │                 │    │                 │
 │ createComment() │───▶│ Cache Layer     │───▶│ getTipsTotal    │
 │                 │    │ - comments[]    │    │ Amount()        │
