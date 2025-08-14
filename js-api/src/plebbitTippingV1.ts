@@ -59,9 +59,9 @@ class PlebbitTippingV1Instance {
     const wallet = new ethers.Wallet(privateKey, this.provider);
     const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet); // Use stored address
     
-    // Convert CIDs to bytes32 format
-    const recipientCidBytes = ethers.keccak256(CID.parse(recipientCommentCid).bytes);
-    const senderCidBytes = senderCommentCid ? ethers.keccak256(CID.parse(senderCommentCid).bytes) : ethers.ZeroHash;
+    // Convert CIDs to bytes32 format (without double hashing)
+    const recipientCidBytes = this.cidToBytes32(recipientCommentCid);
+    const senderCidBytes = senderCommentCid ? this.cidToBytes32(senderCommentCid) : ethers.ZeroHash;
     
     // Get minimum tip amount from contract and use a higher amount
     const minTipAmount = await contractWithSigner.minimumTipAmount();
@@ -251,9 +251,8 @@ class PlebbitTippingV1Instance {
   }
 
   private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string) {
-    const cidBytes = CID.parse(recipientCommentCid).bytes;
-    // Convert variable-length CID bytes to fixed 32-byte format
-    const cidBytes32 = ethers.keccak256(cidBytes);
+    // Convert CID to bytes32 format (without double hashing)
+    const cidBytes32 = this.cidToBytes32(recipientCommentCid);
     const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, feeRecipients);
     return totalAmount;
   }
@@ -264,6 +263,34 @@ class PlebbitTippingV1Instance {
 
   async getMinimumTipAmount() {
     return await this.contract.minimumTipAmount();
+  }
+
+  /**
+   * Convert IPFS CID to bytes32 format for Solidity contracts
+   * This preserves the original CID information without double hashing
+   * @param cid The IPFS CID string
+   * @returns The CID as a bytes32 hex string
+   */
+  private cidToBytes32(cid: string): string {
+    const cidBytes = CID.parse(cid).bytes;
+    
+    // Convert to hex string
+    const hexString = ethers.hexlify(cidBytes);
+    
+    // If the CID bytes are exactly 32 bytes, use as-is
+    if (cidBytes.length === 32) {
+      return hexString;
+    }
+    
+    // If longer than 32 bytes, take the first 32 bytes
+    if (cidBytes.length > 32) {
+      return ethers.hexlify(cidBytes.slice(0, 32));
+    }
+    
+    // If shorter than 32 bytes, pad with zeros on the right
+    const paddedBytes = new Uint8Array(32);
+    paddedBytes.set(cidBytes);
+    return ethers.hexlify(paddedBytes);
   }
 
   private getFeeRecipient(comment: any): string {
