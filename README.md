@@ -55,7 +55,18 @@ plebbit-tipping-v1/
    npm run build
    ```
 
+4. Copy ADMIN_ADDRESS and RPC API-KEY's to .env 
+   ```bash
+   cp .env.example contracts/.env 
+   cp .env.example js-api/.env 
+   ```
+
 ### Running Tests
+
+Execute the following command to run in one terminal:
+```bash
+npm run node 
+```
 
 Execute the following command to run the tests:
 ```bash

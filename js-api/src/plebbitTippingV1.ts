@@ -13,6 +13,7 @@ interface BulkRequest {
 class PlebbitTippingV1Instance {
   private contract: ethers.Contract;
   private contractAddress: string; // Store contract address separately
+  private provider: ethers.Provider; // Add private provider
   private rpcUrls: string[];
   private cache: { maxAge: number };
   private defaultFeeRecipient: string = "0x0000000000000000000000000000000000000000";
@@ -35,10 +36,16 @@ class PlebbitTippingV1Instance {
     this.rpcUrls = rpcUrls;
     this.cache = cache;
     this.contractAddress = contractAddress; // Store the address
-    const provider = new ethers.JsonRpcProvider(rpcUrls[0]);
+    
+    // Handle undefined/empty rpcUrls with fallback to default provider
+    if (!rpcUrls || rpcUrls.length === 0 || !rpcUrls[0]) {
+      this.provider = ethers.getDefaultProvider();
+    } else {
+      this.provider = new ethers.JsonRpcProvider(rpcUrls[0]);
+    }
     
     // Always create read-only contract for queries
-    this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, provider);
+    this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, this.provider);
   }
 
   async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender, privateKey }: { 
@@ -48,9 +55,8 @@ class PlebbitTippingV1Instance {
     sender?: string,
     privateKey: string
   }) {
-    // Create a new provider and wallet with private key for this transaction
-    const provider = new ethers.JsonRpcProvider(this.rpcUrls[0]);
-    const wallet = new ethers.Wallet(privateKey, provider);
+    // Reuse the existing provider instead of creating a new one
+    const wallet = new ethers.Wallet(privateKey, this.provider);
     const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet); // Use stored address
     
     // Convert CIDs to bytes32 format
