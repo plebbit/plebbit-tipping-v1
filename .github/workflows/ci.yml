@@ -14,10 +14,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Use Node.js 20.x
+    - name: Use Node.js 22.x
       uses: actions/setup-node@v4
       with:
-        node-version: 20.x
+        node-version: 22.x
         cache: 'npm'
         
     - name: Install dependencies
@@ -51,7 +51,8 @@ jobs:
         
         # Start Hardhat node (without mainnet fork for CI speed)
         echo "=== Starting Hardhat node ==="
-        nohup npx hardhat node --no-deploy --hostname 127.0.0.1 --port 8545 > hardhat.log 2>&1 &
+        nohup npm run node > hardhat.log 2>&1 &
+        # nohup npx hardhat node --no-deploy --hostname 127.0.0.1 --port 8545 > hardhat.log 2>&1 &
         
         HARDHAT_PID=$!
         echo $HARDHAT_PID > hardhat.pid

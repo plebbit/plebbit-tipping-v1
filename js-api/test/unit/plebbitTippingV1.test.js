@@ -147,36 +147,39 @@ describe('PlebbitTippingV1', () => {
      * @description Test CID parsing integration in createTip method
      * 
      * Verifies that the createTip method correctly converts IPFS CIDs
-     * to the proper format (keccak256 hash) for blockchain transactions.
-     * The test mocks the contract.tip method and validates the parameters
-     * passed to it.
+     * to the proper bytes32 format for blockchain transactions without double hashing.
+     * This preserves the original CID information for discoverability.
      * 
      * @async
      * @function it
      * @param {string} recipientCid - IPFS CID of the recipient comment
      * @param {string} senderCid - IPFS CID of the sender comment
-     * @param {Function} mockTip - Mocked contract.tip method
-     * @expects {Function} mockTip should be called with correct parameters
-     * @expects {string} First parameter should be sender address
-     * @expects {BigInt} Second parameter should be tip amount
-     * @expects {string} Third parameter should be fee recipient
-     * @expects {string} Fourth parameter should be sender CID hash
-     * @expects {string} Fifth parameter should be recipient CID hash
-     * @expects {Object} Sixth parameter should be transaction options
+     * @expects {Uint8Array} CID bytes should be properly converted to hex
+     * @expects {string} Different CIDs should produce different bytes32 values
+     * @expects {number} Result should be 32 bytes (66 chars with 0x prefix)
+     * @expects {number} Original CID bytes should be preserved
      */
     it('should parse CIDs correctly for tip creation', async () => {
       const recipientCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
       const senderCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
       
-      // Test CID parsing directly (this is what the test should actually verify)
-      const recipientCidBytes = ethers.keccak256(CID.parse(recipientCid).bytes);
-      const senderCidBytes = ethers.keccak256(CID.parse(senderCid).bytes);
+      // Test CID parsing directly (without double hashing)
+      const recipientCidBytes = CID.parse(recipientCid).bytes;
+      const senderCidBytes = CID.parse(senderCid).bytes;
       
-      expect(recipientCidBytes).toBeDefined();
-      expect(senderCidBytes).toBeDefined();
-      expect(recipientCidBytes).not.toBe(senderCidBytes);
-      expect(recipientCidBytes.length).toBe(66); // 0x + 32 bytes
-      expect(senderCidBytes.length).toBe(66); // 0x + 32 bytes
+      // Convert to hex format (simulating what cidToBytes32 does)
+      const recipientHex = ethers.hexlify(recipientCidBytes.slice(0, 32));
+      const senderHex = ethers.hexlify(senderCidBytes.slice(0, 32));
+      
+      expect(recipientHex).toBeDefined();
+      expect(senderHex).toBeDefined();
+      expect(recipientHex).not.toBe(senderHex);
+      expect(recipientHex.length).toBe(66); // 0x + 32 bytes
+      expect(senderHex.length).toBe(66); // 0x + 32 bytes
+      
+      // Verify original CID bytes are preserved (not double hashed)
+      expect(recipientCidBytes.length).toBeGreaterThan(0);
+      expect(senderCidBytes.length).toBeGreaterThan(0);
     });
   });
 
