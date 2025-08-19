@@ -496,4 +496,57 @@ describe('PlebbitTippingV1', () => {
       expect(key1).not.toBe(key2);
     });
   });
+
+  /**
+   * @description Test suite for createTip API behavior
+   * 
+   * Validates that the createTip method returns the correct API structure
+   * without actually executing blockchain transactions.
+   * 
+   * @test {createTip} API structure and initial state
+   */
+  describe('CreateTip API Behavior', () => {
+    /**
+     * @description Test createTip returns correct API structure
+     * 
+     * Verifies that createTip returns an object with the expected properties
+     * and that all values are initially undefined as per the API specification.
+     * 
+     * @async
+     * @function it
+     * @expects {Object} result should have transactionHash, receipt, error, send properties
+     * @expects {undefined} all initial values should be undefined
+     * @expects {Function} send should be a function
+     */
+    it('should return correct API structure with initial undefined values', async () => {
+      const feeRecipients = ['0x123'];
+      const recipientCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const senderCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
+      const privateKey = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
+      // This should return immediately without making any contract calls
+      const result = await plebbitTipping.createTip({
+        feeRecipients,
+        recipientCommentCid: recipientCid,
+        senderCommentCid: senderCid,
+        sender: '0x456',
+        privateKey
+      });
+
+      // Verify the API structure
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('transactionHash');
+      expect(result).toHaveProperty('receipt');
+      expect(result).toHaveProperty('error');
+      expect(result).toHaveProperty('send');
+
+      // Verify initial state - all should be undefined
+      expect(result.transactionHash).toBeUndefined();
+      expect(result.receipt).toBeUndefined();
+      expect(result.error).toBeUndefined();
+
+      // Verify send is a function
+      expect(typeof result.send).toBe('function');
+    });
+  });
 });

@@ -12,3 +12,16 @@ export interface PlebbitTippingV1Options {
   };
   privateKey?: string;
 }
+
+export interface TransactionResult {
+  transactionHash?: string;
+  receipt?: any;
+  error?: Error;
+}
+
+export interface TipTransaction {
+  transactionHash?: string;
+  receipt?: any;
+  error?: Error;
+  send(): Promise<TransactionResult>;
+}

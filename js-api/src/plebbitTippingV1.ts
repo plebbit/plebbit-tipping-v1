@@ -2,6 +2,8 @@ import { ethers } from "ethers";
 import PlebbitTippingV1Json from "./PlebbitTippingV1.json" with { type: "json" };
 const PlebbitTippingV1Abi = PlebbitTippingV1Json.abi;
 import { CID } from 'multiformats/cid';
+import {decode} from 'multiformats/hashes/digest';
+import { TipTransaction, TransactionResult } from './types.js';
 
 interface BulkRequest {
   feeRecipients: string[];
@@ -54,38 +56,69 @@ class PlebbitTippingV1Instance {
     senderCommentCid?: string, 
     sender?: string,
     privateKey: string
-  }) {
-    // Reuse the existing provider instead of creating a new one
+  }): Promise<TipTransaction> {
+    // Prepare wallet and contract, but don't call the contract yet
     const wallet = new ethers.Wallet(privateKey, this.provider);
-    const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet); // Use stored address
+    const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet);
     
     // Convert CIDs to bytes32 format (without double hashing)
     const recipientCidBytes = this.cidToBytes32(recipientCommentCid);
     const senderCidBytes = senderCommentCid ? this.cidToBytes32(senderCommentCid) : ethers.ZeroHash;
     
-    // Get minimum tip amount from contract and use a higher amount
-    const minTipAmount = await contractWithSigner.minimumTipAmount();
-    const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
-    
-    const tipTx = await contractWithSigner.tip(
-      sender || wallet.address, // Use wallet address if sender not provided
-      tipAmount,
-      feeRecipients[0],
-      senderCidBytes,
-      recipientCidBytes,
-      { from: sender || wallet.address, value: tipAmount } // Add value to the transaction
-    );
-
-    return {
-      async send() {
-        const receipt = await tipTx.wait();
-        return {
-          transactionHash: tipTx.hash,
-          receipt,
-          error: undefined,
-        };
+    // Create transaction object with initially undefined values
+    const transaction: TipTransaction = {
+      transactionHash: undefined,
+      receipt: undefined,
+      error: undefined,
+      
+      async send(): Promise<TransactionResult> {
+        try {
+          // Get minimum tip amount from contract and use a higher amount
+          const minTipAmount = await contractWithSigner.minimumTipAmount();
+          const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
+          
+          // Actually call the contract method now
+          const tipTx = await contractWithSigner.tip(
+            sender || wallet.address, // Use wallet address if sender not provided
+            tipAmount,
+            feeRecipients[0],
+            senderCidBytes,
+            recipientCidBytes,
+            { from: sender || wallet.address, value: tipAmount } // Add value to the transaction
+          );
+          
+          // Set transactionHash immediately after transaction is submitted
+          transaction.transactionHash = tipTx.hash;
+          
+          try {
+            // Wait for transaction to be mined
+            const receipt = await tipTx.wait();
+            transaction.receipt = receipt;
+            return {
+              transactionHash: tipTx.hash,
+              receipt,
+              error: undefined,
+            };
+          } catch (receiptError) {
+            transaction.error = receiptError as Error;
+            return {
+              transactionHash: tipTx.hash,
+              receipt: undefined,
+              error: receiptError as Error,
+            };
+          }
+        } catch (txError) {
+          transaction.error = txError as Error;
+          return {
+            transactionHash: undefined,
+            receipt: undefined,
+            error: txError as Error,
+          };
+        }
       }
     };
+
+    return transaction;
   }
 
   async createComment({ feeRecipients, recipientCommentCid }: { 
@@ -266,31 +299,21 @@ class PlebbitTippingV1Instance {
   }
 
   /**
-   * Convert IPFS CID to bytes32 format for Solidity contracts
-   * This preserves the original CID information without double hashing
+   * Convert a CID string to bytes32 for smart contract storage.
+   * Extracts the raw 32-byte hash digest from the CID, removing multihash prefixes.
    * @param cid The IPFS CID string
-   * @returns The CID as a bytes32 hex string
+   * @returns The raw hash as a bytes32 hex string
    */
   private cidToBytes32(cid: string): string {
-    const cidBytes = CID.parse(cid).bytes;
+    // Extract the raw hash digest (32 bytes) without multihash prefixes
+    const cidBytes = decode(CID.parse(cid).multihash.bytes).digest;
     
-    // Convert to hex string
-    const hexString = ethers.hexlify(cidBytes);
-    
-    // If the CID bytes are exactly 32 bytes, use as-is
-    if (cidBytes.length === 32) {
-      return hexString;
+    // The raw hash digest should always be 32 bytes
+    if (cidBytes.length !== 32) {
+      throw new Error(`Unexpected hash digest length: ${cidBytes.length}, expected 32 bytes. CID: ${cid}`);
     }
     
-    // If longer than 32 bytes, take the first 32 bytes
-    if (cidBytes.length > 32) {
-      return ethers.hexlify(cidBytes.slice(0, 32));
-    }
-    
-    // If shorter than 32 bytes, pad with zeros on the right
-    const paddedBytes = new Uint8Array(32);
-    paddedBytes.set(cidBytes);
-    return ethers.hexlify(paddedBytes);
+    return ethers.hexlify(cidBytes);
   }
 
   private getFeeRecipient(comment: any): string {
