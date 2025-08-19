@@ -12,6 +12,74 @@ interface BulkRequest {
   reject: (error: any) => void;
 }
 
+// Comment instance class that maintains state over time
+class Comment {
+  public tipsTotalAmount: bigint = 0n;
+  protected plebbitTippingInstance: PlebbitTippingV1Instance;
+  protected feeRecipients: string[];
+  protected recipientCommentCid: string;
+
+  constructor(
+    plebbitTippingInstance: PlebbitTippingV1Instance,
+    feeRecipients: string[],
+    recipientCommentCid: string,
+    initialTipsTotalAmount: bigint
+  ) {
+    this.plebbitTippingInstance = plebbitTippingInstance;
+    this.feeRecipients = feeRecipients;
+    this.recipientCommentCid = recipientCommentCid;
+    this.tipsTotalAmount = initialTipsTotalAmount;
+  }
+
+  async updateTipsTotalAmount(): Promise<void> {
+    const newAmount = await this.plebbitTippingInstance.getDebouncedTipsTotalAmount(
+      this.feeRecipients, 
+      this.recipientCommentCid
+    );
+    this.tipsTotalAmount = newAmount;
+    
+    // Also update the cached value in the main instance
+    const cacheKey = this.plebbitTippingInstance.createCacheKey(this.feeRecipients, this.recipientCommentCid);
+    if (this.plebbitTippingInstance.comments[cacheKey]) {
+      this.plebbitTippingInstance.comments[cacheKey].tipsTotalAmount = newAmount;
+    }
+  }
+}
+
+// SenderComment instance class that extends Comment functionality
+class SenderComment extends Comment {
+  public senderCommentCid?: string;
+  public sender: string;
+
+  constructor(
+    plebbitTippingInstance: PlebbitTippingV1Instance,
+    feeRecipients: string[],
+    recipientCommentCid: string,
+    initialTipsTotalAmount: bigint,
+    sender: string,
+    senderCommentCid?: string
+  ) {
+    super(plebbitTippingInstance, feeRecipients, recipientCommentCid, initialTipsTotalAmount);
+    this.sender = sender;
+    this.senderCommentCid = senderCommentCid;
+  }
+
+  async updateTipsTotalAmount(): Promise<void> {
+    await super.updateTipsTotalAmount();
+    
+    // Also update the cached value in sender comments
+    const cacheKey = this.plebbitTippingInstance.createSenderCacheKey(
+      this.feeRecipients, 
+      this.recipientCommentCid, 
+      this.senderCommentCid, 
+      this.sender
+    );
+    if (this.plebbitTippingInstance.senderComments[cacheKey]) {
+      this.plebbitTippingInstance.senderComments[cacheKey].tipsTotalAmount = this.tipsTotalAmount;
+    }
+  }
+}
+
 class PlebbitTippingV1Instance {
   private contract: ethers.Contract;
   private contractAddress: string; // Store contract address separately
@@ -24,9 +92,9 @@ class PlebbitTippingV1Instance {
   private debouncedBulkCalls: Map<string, NodeJS.Timeout> = new Map();
   private pendingBulkRequests: Map<string, BulkRequest[]> = new Map();
   
-  // Public cache access for testing
-  public comments: Record<string, any> = {};
-  public senderComments: Record<string, any> = {};
+  // Public cache access for testing - now stores Comment instances
+  public comments: Record<string, Comment> = {};
+  public senderComments: Record<string, SenderComment> = {};
   
   // Cache expiration
   private cacheExpirationTimers: Map<string, NodeJS.Timeout> = new Map();
@@ -124,7 +192,7 @@ class PlebbitTippingV1Instance {
   async createComment({ feeRecipients, recipientCommentCid }: { 
     feeRecipients: string[], 
     recipientCommentCid: string 
-  }) {
+  }): Promise<Comment> {
     // Create comprehensive cache key
     const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
 
@@ -132,25 +200,15 @@ class PlebbitTippingV1Instance {
       // Use debounced bulk call for tips total amount
       const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
       
-      this.comments[cacheKey] = {
-        tipsTotalAmount,
-        feeRecipients,
-        recipientCommentCid
-      };
+      // Create Comment instance
+      const commentInstance = new Comment(this, feeRecipients, recipientCommentCid, tipsTotalAmount);
+      this.comments[cacheKey] = commentInstance;
 
       // Set up cache expiration using cache.maxAge
       this.setupCacheExpiration(cacheKey);
     }
 
-    const self = this;
-    return {
-      tipsTotalAmount: this.comments[cacheKey].tipsTotalAmount,
-      async updateTipsTotalAmount() {
-        const newAmount = await self.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
-        self.comments[cacheKey].tipsTotalAmount = newAmount;
-        return newAmount;
-      }
-    };
+    return this.comments[cacheKey];
   }
 
   async createSenderComment({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { 
@@ -158,18 +216,24 @@ class PlebbitTippingV1Instance {
     recipientCommentCid: string, 
     senderCommentCid?: string, 
     sender: string 
-  }) {
+  }): Promise<SenderComment> {
     // Create comprehensive cache key for sender comments
     const cacheKey = this.createSenderCacheKey(feeRecipients, recipientCommentCid, senderCommentCid, sender);
 
     if (!this.senderComments[cacheKey]) {
-      const comment = await this.createComment({ feeRecipients, recipientCommentCid });
+      // Get the tips total amount
+      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
       
-      this.senderComments[cacheKey] = {
-        ...comment,
-        senderCommentCid,
-        sender
-      };
+      // Create SenderComment instance
+      const senderCommentInstance = new SenderComment(
+        this, 
+        feeRecipients, 
+        recipientCommentCid, 
+        tipsTotalAmount, 
+        sender, 
+        senderCommentCid
+      );
+      this.senderComments[cacheKey] = senderCommentInstance;
 
       // Set up cache expiration using cache.maxAge
       this.setupCacheExpiration(cacheKey, true);
@@ -178,11 +242,12 @@ class PlebbitTippingV1Instance {
     return this.senderComments[cacheKey];
   }
 
-  private createCacheKey(feeRecipients: string[], recipientCommentCid: string): string {
+  // Make these methods public so Comment instances can use them
+  public createCacheKey(feeRecipients: string[], recipientCommentCid: string): string {
     return `comment:${feeRecipients.sort().join(',')}:${recipientCommentCid}`;
   }
 
-  private createSenderCacheKey(feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender?: string): string {
+  public createSenderCacheKey(feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender?: string): string {
     return `sender:${feeRecipients.sort().join(',')}:${recipientCommentCid}:${senderCommentCid || ''}:${sender || ''}`;
   }
 
@@ -205,7 +270,8 @@ class PlebbitTippingV1Instance {
     this.cacheExpirationTimers.set(cacheKey, timer);
   }
 
-  private async getDebouncedTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<any> {
+  // Make this method public so Comment instances can use it
+  public async getDebouncedTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<bigint> {
     const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
     
     return new Promise((resolve, reject) => {
@@ -283,7 +349,7 @@ class PlebbitTippingV1Instance {
     });
   }
 
-  private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string) {
+  private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<bigint> {
     // Convert CID to bytes32 format (without double hashing)
     const cidBytes32 = this.cidToBytes32(recipientCommentCid);
     const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, feeRecipients);
@@ -347,4 +413,7 @@ export async function PlebbitTippingV1({ rpcUrls, cache }: {
   
   return new PlebbitTippingV1Instance(rpcUrls, cache, contractAddress);
 }
+
+// Export the classes for external use
+export { Comment, SenderComment };
 

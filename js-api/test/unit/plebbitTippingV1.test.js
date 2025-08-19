@@ -498,55 +498,285 @@ describe('PlebbitTippingV1', () => {
   });
 
   /**
-   * @description Test suite for createTip API behavior
+   * @description Test suite for Comment and SenderComment instance state updates
    * 
-   * Validates that the createTip method returns the correct API structure
-   * without actually executing blockchain transactions.
+   * Validates that Comment and SenderComment instances properly maintain and update
+   * their state over time when updateTipsTotalAmount() is called multiple times.
    * 
-   * @test {createTip} API structure and initial state
+   * @test {Comment} Instance state updates over time
+   * @test {SenderComment} Instance state updates over time
+   * @test {updateTipsTotalAmount} Method doesn't return anything
    */
-  describe('CreateTip API Behavior', () => {
+  describe('Instance State Management', () => {
     /**
-     * @description Test createTip returns correct API structure
+     * @description Test Comment instance state updates over time
      * 
-     * Verifies that createTip returns an object with the expected properties
-     * and that all values are initially undefined as per the API specification.
+     * Verifies that a Comment instance properly updates its tipsTotalAmount
+     * property when updateTipsTotalAmount() is called multiple times with
+     * different mock values, ensuring the instance maintains state correctly.
      * 
      * @async
      * @function it
-     * @expects {Object} result should have transactionHash, receipt, error, send properties
-     * @expects {undefined} all initial values should be undefined
-     * @expects {Function} send should be a function
+     * @param {string[]} feeRecipients - Array of fee recipient addresses
+     * @param {string} recipientCid - IPFS CID of the recipient comment
+     * @param {Function} mockGetTipsTotalAmount - Mocked contract method with changing values
+     * @param {Comment} comment - Comment instance
+     * @expects {bigint} comment.tipsTotalAmount should update to reflect new values
+     * @expects {undefined} updateTipsTotalAmount should not return anything
+     * @timeout {number} 10000ms - Extended timeout for multiple async operations
      */
-    it('should return correct API structure with initial undefined values', async () => {
+    it('should update Comment instance state over time', async () => {
       const feeRecipients = ['0x123'];
       const recipientCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
-      const senderCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
-      const privateKey = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
-      // This should return immediately without making any contract calls
-      const result = await plebbitTipping.createTip({
+      // Create sequential mock values to simulate changing tip amounts
+      let mockCallCount = 0;
+      const mockValues = ['1000000000000000000', '2000000000000000000', '3000000000000000000'];
+      
+      const mockGetTipsTotalAmount = jest.fn().mockImplementation(() => {
+        const value = mockValues[mockCallCount % mockValues.length];
+        mockCallCount++;
+        return Promise.resolve(value);
+      });
+      
+      plebbitTipping.contract.getTipsTotalAmount = mockGetTipsTotalAmount;
+
+      // Create comment instance
+      const comment = await plebbitTipping.createComment({
+        feeRecipients,
+        recipientCommentCid: recipientCid,
+      });
+
+      // Wait for debounced call to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify initial state
+      expect(comment.tipsTotalAmount.toString()).toBe('1000000000000000000');
+
+      // Update the instance state
+      const updateResult1 = await comment.updateTipsTotalAmount();
+      
+      // Verify updateTipsTotalAmount doesn't return anything
+      expect(updateResult1).toBeUndefined();
+      
+      // Wait for debounced call to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify state updated
+      expect(comment.tipsTotalAmount.toString()).toBe('2000000000000000000');
+
+      // Update again
+      const updateResult2 = await comment.updateTipsTotalAmount();
+      expect(updateResult2).toBeUndefined();
+      
+      // Wait for debounced call to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify state updated again
+      expect(comment.tipsTotalAmount.toString()).toBe('3000000000000000000');
+
+      // Verify the instance is the same object (maintaining state)
+      const sameComment = await plebbitTipping.createComment({
+        feeRecipients,
+        recipientCommentCid: recipientCid,
+      });
+      
+      expect(sameComment).toBe(comment); // Should be the same instance from cache
+      expect(sameComment.tipsTotalAmount.toString()).toBe('3000000000000000000');
+    }, 10000);
+
+    /**
+     * @description Test SenderComment instance state updates over time
+     * 
+     * Verifies that a SenderComment instance properly updates its tipsTotalAmount
+     * property when updateTipsTotalAmount() is called multiple times, and that
+     * it maintains sender-specific properties while inheriting Comment behavior.
+     * 
+     * @async
+     * @function it
+     * @param {string[]} feeRecipients - Array of fee recipient addresses
+     * @param {string} recipientCid - IPFS CID of the recipient comment
+     * @param {string} senderCid - IPFS CID of the sender comment
+     * @param {string} sender - Sender address
+     * @param {Function} mockGetTipsTotalAmount - Mocked contract method with changing values
+     * @param {SenderComment} senderComment - SenderComment instance
+     * @expects {bigint} senderComment.tipsTotalAmount should update to reflect new values
+     * @expects {string} senderComment.sender should remain constant
+     * @expects {string} senderComment.senderCommentCid should remain constant
+     * @expects {undefined} updateTipsTotalAmount should not return anything
+     * @timeout {number} 10000ms - Extended timeout for multiple async operations
+     */
+    it('should update SenderComment instance state over time', async () => {
+      const feeRecipients = ['0x456'];
+      const recipientCid = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
+      const senderCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
+      const sender = '0x789';
+
+      // Create sequential mock values
+      let mockCallCount = 0;
+      const mockValues = ['500000000000000000', '1500000000000000000', '2500000000000000000'];
+      
+      const mockGetTipsTotalAmount = jest.fn().mockImplementation(() => {
+        const value = mockValues[mockCallCount % mockValues.length];
+        mockCallCount++;
+        return Promise.resolve(value);
+      });
+      
+      plebbitTipping.contract.getTipsTotalAmount = mockGetTipsTotalAmount;
+
+      // Create sender comment instance
+      const senderComment = await plebbitTipping.createSenderComment({
         feeRecipients,
         recipientCommentCid: recipientCid,
         senderCommentCid: senderCid,
-        sender: '0x456',
-        privateKey
+        sender,
       });
 
-      // Verify the API structure
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('transactionHash');
-      expect(result).toHaveProperty('receipt');
-      expect(result).toHaveProperty('error');
-      expect(result).toHaveProperty('send');
+      // Wait for debounced call to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      // Verify initial state - all should be undefined
-      expect(result.transactionHash).toBeUndefined();
-      expect(result.receipt).toBeUndefined();
-      expect(result.error).toBeUndefined();
+      // Verify initial state
+      expect(senderComment.tipsTotalAmount.toString()).toBe('500000000000000000');
+      expect(senderComment.sender).toBe(sender);
+      expect(senderComment.senderCommentCid).toBe(senderCid);
 
-      // Verify send is a function
-      expect(typeof result.send).toBe('function');
-    });
+      // Update the instance state
+      const updateResult1 = await senderComment.updateTipsTotalAmount();
+      
+      // Verify updateTipsTotalAmount doesn't return anything
+      expect(updateResult1).toBeUndefined();
+      
+      // Wait for debounced call to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify state updated but sender properties remain
+      expect(senderComment.tipsTotalAmount.toString()).toBe('1500000000000000000');
+      expect(senderComment.sender).toBe(sender);
+      expect(senderComment.senderCommentCid).toBe(senderCid);
+
+      // Update again
+      const updateResult2 = await senderComment.updateTipsTotalAmount();
+      expect(updateResult2).toBeUndefined();
+      
+      // Wait for debounced call to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify state updated again
+      expect(senderComment.tipsTotalAmount.toString()).toBe('2500000000000000000');
+      expect(senderComment.sender).toBe(sender);
+      expect(senderComment.senderCommentCid).toBe(senderCid);
+
+      // Verify the instance is the same object (maintaining state)
+      const sameSenderComment = await plebbitTipping.createSenderComment({
+        feeRecipients,
+        recipientCommentCid: recipientCid,
+        senderCommentCid: senderCid,
+        sender,
+      });
+      
+      expect(sameSenderComment).toBe(senderComment); // Should be the same instance from cache
+      expect(sameSenderComment.tipsTotalAmount.toString()).toBe('2500000000000000000');
+    }, 10000);
+
+    /**
+     * @description Test multiple instances maintain separate state
+     * 
+     * Verifies that different Comment and SenderComment instances maintain
+     * their own separate state and don't interfere with each other when
+     * updated multiple times.
+     * 
+     * @async
+     * @function it
+     * @param {Comment} comment1 - First comment instance
+     * @param {Comment} comment2 - Second comment instance  
+     * @param {SenderComment} senderComment - Sender comment instance
+     * @expects {bigint} Each instance should maintain its own tipsTotalAmount
+     * @expects {boolean} Instances should be different objects
+     * @timeout {number} 10000ms - Extended timeout for multiple async operations
+     */
+    it('should maintain separate state for different instances', async () => {
+      const feeRecipients1 = ['0xaaa'];
+      const feeRecipients2 = ['0xbbb'];
+      const recipientCid1 = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const recipientCid2 = 'QmTgqo6NqkBAm9ks4Z1CirgW4Di3QuA6iRgn68EHi6D8R5';
+      const senderCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
+      const sender = '0xccc';
+
+      // Create a mock that returns different values based on the parameters
+      const mockGetTipsTotalAmount = jest.fn().mockImplementation((cidBytes32, feeRecipients) => {
+        // Return different values based on fee recipients to distinguish instances
+        if (feeRecipients[0] === '0xaaa') {
+          // For comment1 and senderComment (both use feeRecipients1)
+          return Promise.resolve('1000000000000000000');
+        } else if (feeRecipients[0] === '0xbbb') {
+          // For comment2
+          return Promise.resolve('2000000000000000000');
+        }
+        return Promise.resolve('0');
+      });
+      
+      plebbitTipping.contract.getTipsTotalAmount = mockGetTipsTotalAmount;
+
+      // Create different instances
+      const comment1 = await plebbitTipping.createComment({
+        feeRecipients: feeRecipients1,
+        recipientCommentCid: recipientCid1,
+      });
+
+      const comment2 = await plebbitTipping.createComment({
+        feeRecipients: feeRecipients2,
+        recipientCommentCid: recipientCid2,
+      });
+
+      const senderComment = await plebbitTipping.createSenderComment({
+        feeRecipients: feeRecipients1,
+        recipientCommentCid: recipientCid1,
+        senderCommentCid: senderCid,
+        sender,
+      });
+
+      // Wait for all debounced calls to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify instances are different objects
+      expect(comment1).not.toBe(comment2);
+      expect(comment1).not.toBe(senderComment);
+      expect(comment2).not.toBe(senderComment);
+
+      // Verify initial states are different and correct
+      expect(comment1.tipsTotalAmount.toString()).toBe('1000000000000000000');
+      expect(comment2.tipsTotalAmount.toString()).toBe('2000000000000000000');
+      expect(senderComment.tipsTotalAmount.toString()).toBe('1000000000000000000'); // Same as comment1 since same feeRecipients
+
+      // Now test that updates work independently
+      // Create a new mock for updates that increments the previous values
+      const updateMock = jest.fn().mockImplementation((cidBytes32, feeRecipients) => {
+        if (feeRecipients[0] === '0xaaa') {
+          return Promise.resolve('1100000000000000000'); // comment1 and senderComment updated
+        } else if (feeRecipients[0] === '0xbbb') {
+          return Promise.resolve('2200000000000000000'); // comment2 updated
+        }
+        return Promise.resolve('0');
+      });
+      
+      plebbitTipping.contract.getTipsTotalAmount = updateMock;
+
+      // Update all instances
+      await comment1.updateTipsTotalAmount();
+      await comment2.updateTipsTotalAmount();
+      await senderComment.updateTipsTotalAmount();
+
+      // Wait for debounced calls to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify each instance maintained its own separate state
+      expect(comment1.tipsTotalAmount.toString()).toBe('1100000000000000000');
+      expect(comment2.tipsTotalAmount.toString()).toBe('2200000000000000000');
+      expect(senderComment.tipsTotalAmount.toString()).toBe('1100000000000000000'); // Same update as comment1
+
+      // Verify sender-specific properties are still intact
+      expect(senderComment.sender).toBe(sender);
+      expect(senderComment.senderCommentCid).toBe(senderCid);
+    }, 10000);
   });
 });

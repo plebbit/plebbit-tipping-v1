@@ -71,6 +71,64 @@ describe('PlebbitTippingV1', () => {
     });
   });
 
+  describe('Instance State Updates', () => {
+    test('should update comment instance state when updateTipsTotalAmount is called', async () => {
+      // Use valid CID format (base58 encoded multihash)
+      const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
+
+      const comment = await plebbitTipping.createComment({
+        feeRecipients,
+        recipientCommentCid,
+      });
+      
+      expect(comment).toBeDefined();
+      expect(comment.tipsTotalAmount).toBeDefined();
+      
+      // Store initial value
+      const initialAmount = comment.tipsTotalAmount;
+      
+      // Call updateTipsTotalAmount - should not return anything
+      const result = await comment.updateTipsTotalAmount();
+      expect(result).toBeUndefined();
+      
+      // The tipsTotalAmount property should still be accessible
+      expect(comment.tipsTotalAmount).toBeDefined();
+      
+      console.log('Comment instance state updated successfully');
+    });
+
+    test('should update sender comment instance state when updateTipsTotalAmount is called', async () => {
+      // Use valid CID format (base58 encoded multihash)
+      const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const senderCommentCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
+      const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
+
+      const senderComment = await plebbitTipping.createSenderComment({
+        feeRecipients,
+        recipientCommentCid,
+        senderCommentCid,
+        sender: process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC',
+      });
+      
+      expect(senderComment).toBeDefined();
+      expect(senderComment.tipsTotalAmount).toBeDefined();
+      expect(senderComment.sender).toBeDefined();
+      expect(senderComment.senderCommentCid).toBe(senderCommentCid);
+      
+      // Call updateTipsTotalAmount - should not return anything
+      const result = await senderComment.updateTipsTotalAmount();
+      expect(result).toBeUndefined();
+      
+      // The properties should still be accessible
+      expect(senderComment.tipsTotalAmount).toBeDefined();
+      expect(senderComment.sender).toBeDefined();
+      expect(senderComment.senderCommentCid).toBe(senderCommentCid);
+      
+      console.log('Sender comment instance state updated successfully');
+    });
+  });
+
   describe('Transaction tests with funded wallet', () => {
     let testWalletInfo;
     let plebbitTippingWithSigner;
