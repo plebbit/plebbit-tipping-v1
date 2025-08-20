@@ -4,10 +4,10 @@ node_modules
 
 # Hardhat files
 /cache
-/artifacts
-/deployments
-contracts/cache/
-contracts/artifacts/
+/contracts/artifacts
+/contracts/cache
+/contracts/node_modules
+/contracts/deployments
 
 js-api/test/dist/
 js-api/dist

@@ -71,6 +71,64 @@ describe('PlebbitTippingV1', () => {
     });
   });
 
+  describe('Instance State Updates', () => {
+    test('should update comment instance state when updateTipsTotalAmount is called', async () => {
+      // Use valid CID format (base58 encoded multihash)
+      const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
+
+      const comment = await plebbitTipping.createComment({
+        feeRecipients,
+        recipientCommentCid,
+      });
+      
+      expect(comment).toBeDefined();
+      expect(comment.tipsTotalAmount).toBeDefined();
+      
+      // Store initial value
+      const initialAmount = comment.tipsTotalAmount;
+      
+      // Call updateTipsTotalAmount - should not return anything
+      const result = await comment.updateTipsTotalAmount();
+      expect(result).toBeUndefined();
+      
+      // The tipsTotalAmount property should still be accessible
+      expect(comment.tipsTotalAmount).toBeDefined();
+      
+      console.log('Comment instance state updated successfully');
+    });
+
+    test('should update sender comment instance state when updateTipsTotalAmount is called', async () => {
+      // Use valid CID format (base58 encoded multihash)
+      const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const senderCommentCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
+      const feeRecipients = [process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC'];
+
+      const senderComment = await plebbitTipping.createSenderComment({
+        feeRecipients,
+        recipientCommentCid,
+        senderCommentCid,
+        sender: process.env.ADMIN_ADDRESS || '0xf39fd6E51AAB6bD838C26c4FD3B5E0D5E9E8F4aC',
+      });
+      
+      expect(senderComment).toBeDefined();
+      expect(senderComment.tipsTotalAmount).toBeDefined();
+      expect(senderComment.sender).toBeDefined();
+      expect(senderComment.senderCommentCid).toBe(senderCommentCid);
+      
+      // Call updateTipsTotalAmount - should not return anything
+      const result = await senderComment.updateTipsTotalAmount();
+      expect(result).toBeUndefined();
+      
+      // The properties should still be accessible
+      expect(senderComment.tipsTotalAmount).toBeDefined();
+      expect(senderComment.sender).toBeDefined();
+      expect(senderComment.senderCommentCid).toBe(senderCommentCid);
+      
+      console.log('Sender comment instance state updated successfully');
+    });
+  });
+
   describe('Transaction tests with funded wallet', () => {
     let testWalletInfo;
     let plebbitTippingWithSigner;
@@ -93,13 +151,13 @@ describe('PlebbitTippingV1', () => {
       console.log('PlebbitTippingV1 instance created');
     });
 
-    test('should create actual tip transaction', async () => {
+    test('should create tip transaction with new API behavior', async () => {
       const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
       const senderCommentCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
       const feeRecipients = [testWalletInfo.funderAddress]; // Use the funder as fee recipient
 
-      console.log('Creating tip transaction...');
-      const result = await plebbitTippingWithSigner.createTip({
+      console.log('Creating tip transaction object...');
+      const tipTransaction = await plebbitTippingWithSigner.createTip({
         feeRecipients,
         recipientCommentCid,
         senderCommentCid,
@@ -107,13 +165,27 @@ describe('PlebbitTippingV1', () => {
         privateKey: testWalletInfo.privateKey // Pass private key to createTip
       });
 
+      // Test initial state - should all be undefined
+      console.log('Testing initial state...');
+      expect(tipTransaction.transactionHash).toBeUndefined();
+      expect(tipTransaction.receipt).toBeUndefined();
+      expect(tipTransaction.error).toBeUndefined();
+      console.log('✅ Initial state correct - all values undefined');
+
       console.log('Sending transaction...');
-      const receipt = await result.send();
+      const result = await tipTransaction.send();
       
-      console.log(`✅ Transaction successful! Hash: ${receipt.transactionHash}`);
-      expect(receipt.transactionHash).toBeDefined();
-      expect(receipt.receipt).toBeDefined();
-      expect(receipt.error).toBeUndefined();
+      // Test final state
+      console.log(`✅ Transaction successful! Hash: ${result.transactionHash}`);
+      expect(result.transactionHash).toBeDefined();
+      expect(result.receipt).toBeDefined();
+      expect(result.error).toBeUndefined();
+      
+      // Test that the transaction object itself was updated
+      expect(tipTransaction.transactionHash).toBeDefined();
+      expect(tipTransaction.receipt).toBeDefined();
+      expect(tipTransaction.error).toBeUndefined();
+      console.log('✅ Transaction object state updated correctly');
     }, 30000); // 30 second timeout for blockchain interaction
 
     test('should work with first Hardhat account directly', async () => {
@@ -130,7 +202,7 @@ describe('PlebbitTippingV1', () => {
       const feeRecipients = [hardhatAccount.address];
 
       console.log('Creating tip with first Hardhat account...');
-      const result = await plebbitTippingHardhat.createTip({
+      const tipTransaction = await plebbitTippingHardhat.createTip({
         feeRecipients,
         recipientCommentCid,
         senderCommentCid,
@@ -138,11 +210,56 @@ describe('PlebbitTippingV1', () => {
         privateKey: hardhatAccount.privateKey // Pass private key to createTip
       });
 
-      const receipt = await result.send();
-      console.log(`✅ Hardhat account transaction successful! Hash: ${receipt.transactionHash}`);
+      // Verify initial state
+      expect(tipTransaction.transactionHash).toBeUndefined();
+      expect(tipTransaction.receipt).toBeUndefined();
+      expect(tipTransaction.error).toBeUndefined();
+
+      const result = await tipTransaction.send();
+      console.log(`✅ Hardhat account transaction successful! Hash: ${result.transactionHash}`);
       
-      expect(receipt.transactionHash).toBeDefined();
-      expect(receipt.receipt).toBeDefined();
+      expect(result.transactionHash).toBeDefined();
+      expect(result.receipt).toBeDefined();
+      expect(result.error).toBeUndefined();
+    }, 30000);
+
+    test('should handle transaction errors correctly', async () => {
+      // Test with invalid private key to trigger an error
+      const recipientCommentCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      const senderCommentCid = 'QmZ9Wg8vnqVjLYXsBhFk9H9GNzpkG4QPkTxSZaLfFJ6rNY';
+      const feeRecipients = [testWalletInfo.funderAddress];
+
+      console.log('Creating tip transaction with invalid private key...');
+      const tipTransaction = await plebbitTippingWithSigner.createTip({
+        feeRecipients,
+        recipientCommentCid,
+        senderCommentCid,
+        sender: testWalletInfo.address,
+        privateKey: '0x0000000000000000000000000000000000000000000000000000000000000001' // Invalid key with insufficient funds
+      });
+
+      // Verify initial state
+      expect(tipTransaction.transactionHash).toBeUndefined();
+      expect(tipTransaction.receipt).toBeUndefined();
+      expect(tipTransaction.error).toBeUndefined();
+
+      console.log('Attempting to send transaction (should fail)...');
+      const result = await tipTransaction.send();
+      
+      // Should have error set
+      console.log('Transaction failed as expected');
+      expect(result.error).toBeDefined();
+      expect(tipTransaction.error).toBeDefined();
+      
+      // Transaction hash might or might not be set depending on where the error occurred
+      if (result.transactionHash) {
+        console.log('Transaction was submitted but failed during mining');
+        expect(result.receipt).toBeUndefined();
+      } else {
+        console.log('Transaction failed during submission');
+        expect(result.transactionHash).toBeUndefined();
+        expect(result.receipt).toBeUndefined();
+      }
     }, 30000);
   });
 });

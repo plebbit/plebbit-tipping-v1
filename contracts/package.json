@@ -19,13 +19,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "@openzeppelin/contracts": "^5.4.0",
-    "hardhat": "^2.26.0",
-    "hardhat-deploy": "^1.0.4",
-    "semver": "^7.7.2"
+    "@nomicfoundation/hardhat-toolbox": "6.1.0",
+    "@openzeppelin/contracts": "5.4.0",
+    "hardhat": "2.26.0",
+    "hardhat-deploy": "1.0.4",
+    "semver": "7.7.2"
   },
   "dependencies": {
     "dotenv": "^17.2.0",

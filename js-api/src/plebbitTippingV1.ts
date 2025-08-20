@@ -2,12 +2,82 @@ import { ethers } from "ethers";
 import PlebbitTippingV1Json from "./PlebbitTippingV1.json" with { type: "json" };
 const PlebbitTippingV1Abi = PlebbitTippingV1Json.abi;
 import { CID } from 'multiformats/cid';
+import {decode} from 'multiformats/hashes/digest';
+import { TipTransaction, TransactionResult } from './types.js';
 
 interface BulkRequest {
   feeRecipients: string[];
   recipientCommentCid: string;
   resolve: (value: any) => void;
   reject: (error: any) => void;
+}
+
+// Comment instance class that maintains state over time
+class Comment {
+  public tipsTotalAmount: bigint = 0n;
+  protected plebbitTippingInstance: PlebbitTippingV1Instance;
+  protected feeRecipients: string[];
+  protected recipientCommentCid: string;
+
+  constructor(
+    plebbitTippingInstance: PlebbitTippingV1Instance,
+    feeRecipients: string[],
+    recipientCommentCid: string,
+    initialTipsTotalAmount: bigint
+  ) {
+    this.plebbitTippingInstance = plebbitTippingInstance;
+    this.feeRecipients = feeRecipients;
+    this.recipientCommentCid = recipientCommentCid;
+    this.tipsTotalAmount = initialTipsTotalAmount;
+  }
+
+  async updateTipsTotalAmount(): Promise<void> {
+    const newAmount = await this.plebbitTippingInstance.getDebouncedTipsTotalAmount(
+      this.feeRecipients, 
+      this.recipientCommentCid
+    );
+    this.tipsTotalAmount = newAmount;
+    
+    // Also update the cached value in the main instance
+    const cacheKey = this.plebbitTippingInstance.createCacheKey(this.feeRecipients, this.recipientCommentCid);
+    if (this.plebbitTippingInstance.comments[cacheKey]) {
+      this.plebbitTippingInstance.comments[cacheKey].tipsTotalAmount = newAmount;
+    }
+  }
+}
+
+// SenderComment instance class that extends Comment functionality
+class SenderComment extends Comment {
+  public senderCommentCid?: string;
+  public sender: string;
+
+  constructor(
+    plebbitTippingInstance: PlebbitTippingV1Instance,
+    feeRecipients: string[],
+    recipientCommentCid: string,
+    initialTipsTotalAmount: bigint,
+    sender: string,
+    senderCommentCid?: string
+  ) {
+    super(plebbitTippingInstance, feeRecipients, recipientCommentCid, initialTipsTotalAmount);
+    this.sender = sender;
+    this.senderCommentCid = senderCommentCid;
+  }
+
+  async updateTipsTotalAmount(): Promise<void> {
+    await super.updateTipsTotalAmount();
+    
+    // Also update the cached value in sender comments
+    const cacheKey = this.plebbitTippingInstance.createSenderCacheKey(
+      this.feeRecipients, 
+      this.recipientCommentCid, 
+      this.senderCommentCid, 
+      this.sender
+    );
+    if (this.plebbitTippingInstance.senderComments[cacheKey]) {
+      this.plebbitTippingInstance.senderComments[cacheKey].tipsTotalAmount = this.tipsTotalAmount;
+    }
+  }
 }
 
 class PlebbitTippingV1Instance {
@@ -22,9 +92,9 @@ class PlebbitTippingV1Instance {
   private debouncedBulkCalls: Map<string, NodeJS.Timeout> = new Map();
   private pendingBulkRequests: Map<string, BulkRequest[]> = new Map();
   
-  // Public cache access for testing
-  public comments: Record<string, any> = {};
-  public senderComments: Record<string, any> = {};
+  // Public cache access for testing - now stores Comment instances
+  public comments: Record<string, Comment> = {};
+  public senderComments: Record<string, SenderComment> = {};
   
   // Cache expiration
   private cacheExpirationTimers: Map<string, NodeJS.Timeout> = new Map();
@@ -54,44 +124,75 @@ class PlebbitTippingV1Instance {
     senderCommentCid?: string, 
     sender?: string,
     privateKey: string
-  }) {
-    // Reuse the existing provider instead of creating a new one
+  }): Promise<TipTransaction> {
+    // Prepare wallet and contract, but don't call the contract yet
     const wallet = new ethers.Wallet(privateKey, this.provider);
-    const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet); // Use stored address
+    const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet);
     
     // Convert CIDs to bytes32 format (without double hashing)
     const recipientCidBytes = this.cidToBytes32(recipientCommentCid);
     const senderCidBytes = senderCommentCid ? this.cidToBytes32(senderCommentCid) : ethers.ZeroHash;
     
-    // Get minimum tip amount from contract and use a higher amount
-    const minTipAmount = await contractWithSigner.minimumTipAmount();
-    const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
-    
-    const tipTx = await contractWithSigner.tip(
-      sender || wallet.address, // Use wallet address if sender not provided
-      tipAmount,
-      feeRecipients[0],
-      senderCidBytes,
-      recipientCidBytes,
-      { from: sender || wallet.address, value: tipAmount } // Add value to the transaction
-    );
-
-    return {
-      async send() {
-        const receipt = await tipTx.wait();
-        return {
-          transactionHash: tipTx.hash,
-          receipt,
-          error: undefined,
-        };
+    // Create transaction object with initially undefined values
+    const transaction: TipTransaction = {
+      transactionHash: undefined,
+      receipt: undefined,
+      error: undefined,
+      
+      async send(): Promise<TransactionResult> {
+        try {
+          // Get minimum tip amount from contract and use a higher amount
+          const minTipAmount = await contractWithSigner.minimumTipAmount();
+          const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
+          
+          // Actually call the contract method now
+          const tipTx = await contractWithSigner.tip(
+            sender || wallet.address, // Use wallet address if sender not provided
+            tipAmount,
+            feeRecipients[0],
+            senderCidBytes,
+            recipientCidBytes,
+            { from: sender || wallet.address, value: tipAmount } // Add value to the transaction
+          );
+          
+          // Set transactionHash immediately after transaction is submitted
+          transaction.transactionHash = tipTx.hash;
+          
+          try {
+            // Wait for transaction to be mined
+            const receipt = await tipTx.wait();
+            transaction.receipt = receipt;
+            return {
+              transactionHash: tipTx.hash,
+              receipt,
+              error: undefined,
+            };
+          } catch (receiptError) {
+            transaction.error = receiptError as Error;
+            return {
+              transactionHash: tipTx.hash,
+              receipt: undefined,
+              error: receiptError as Error,
+            };
+          }
+        } catch (txError) {
+          transaction.error = txError as Error;
+          return {
+            transactionHash: undefined,
+            receipt: undefined,
+            error: txError as Error,
+          };
+        }
       }
     };
+
+    return transaction;
   }
 
   async createComment({ feeRecipients, recipientCommentCid }: { 
     feeRecipients: string[], 
     recipientCommentCid: string 
-  }) {
+  }): Promise<Comment> {
     // Create comprehensive cache key
     const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
 
@@ -99,25 +200,15 @@ class PlebbitTippingV1Instance {
       // Use debounced bulk call for tips total amount
       const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
       
-      this.comments[cacheKey] = {
-        tipsTotalAmount,
-        feeRecipients,
-        recipientCommentCid
-      };
+      // Create Comment instance
+      const commentInstance = new Comment(this, feeRecipients, recipientCommentCid, tipsTotalAmount);
+      this.comments[cacheKey] = commentInstance;
 
       // Set up cache expiration using cache.maxAge
       this.setupCacheExpiration(cacheKey);
     }
 
-    const self = this;
-    return {
-      tipsTotalAmount: this.comments[cacheKey].tipsTotalAmount,
-      async updateTipsTotalAmount() {
-        const newAmount = await self.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
-        self.comments[cacheKey].tipsTotalAmount = newAmount;
-        return newAmount;
-      }
-    };
+    return this.comments[cacheKey];
   }
 
   async createSenderComment({ feeRecipients, recipientCommentCid, senderCommentCid, sender }: { 
@@ -125,18 +216,24 @@ class PlebbitTippingV1Instance {
     recipientCommentCid: string, 
     senderCommentCid?: string, 
     sender: string 
-  }) {
+  }): Promise<SenderComment> {
     // Create comprehensive cache key for sender comments
     const cacheKey = this.createSenderCacheKey(feeRecipients, recipientCommentCid, senderCommentCid, sender);
 
     if (!this.senderComments[cacheKey]) {
-      const comment = await this.createComment({ feeRecipients, recipientCommentCid });
+      // Get the tips total amount
+      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
       
-      this.senderComments[cacheKey] = {
-        ...comment,
-        senderCommentCid,
-        sender
-      };
+      // Create SenderComment instance
+      const senderCommentInstance = new SenderComment(
+        this, 
+        feeRecipients, 
+        recipientCommentCid, 
+        tipsTotalAmount, 
+        sender, 
+        senderCommentCid
+      );
+      this.senderComments[cacheKey] = senderCommentInstance;
 
       // Set up cache expiration using cache.maxAge
       this.setupCacheExpiration(cacheKey, true);
@@ -145,11 +242,12 @@ class PlebbitTippingV1Instance {
     return this.senderComments[cacheKey];
   }
 
-  private createCacheKey(feeRecipients: string[], recipientCommentCid: string): string {
+  // Make these methods public so Comment instances can use them
+  public createCacheKey(feeRecipients: string[], recipientCommentCid: string): string {
     return `comment:${feeRecipients.sort().join(',')}:${recipientCommentCid}`;
   }
 
-  private createSenderCacheKey(feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender?: string): string {
+  public createSenderCacheKey(feeRecipients: string[], recipientCommentCid: string, senderCommentCid?: string, sender?: string): string {
     return `sender:${feeRecipients.sort().join(',')}:${recipientCommentCid}:${senderCommentCid || ''}:${sender || ''}`;
   }
 
@@ -172,7 +270,8 @@ class PlebbitTippingV1Instance {
     this.cacheExpirationTimers.set(cacheKey, timer);
   }
 
-  private async getDebouncedTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<any> {
+  // Make this method public so Comment instances can use it
+  public async getDebouncedTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<bigint> {
     const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
     
     return new Promise((resolve, reject) => {
@@ -250,7 +349,7 @@ class PlebbitTippingV1Instance {
     });
   }
 
-  private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string) {
+  private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<bigint> {
     // Convert CID to bytes32 format (without double hashing)
     const cidBytes32 = this.cidToBytes32(recipientCommentCid);
     const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, feeRecipients);
@@ -266,31 +365,21 @@ class PlebbitTippingV1Instance {
   }
 
   /**
-   * Convert IPFS CID to bytes32 format for Solidity contracts
-   * This preserves the original CID information without double hashing
+   * Convert a CID string to bytes32 for smart contract storage.
+   * Extracts the raw 32-byte hash digest from the CID, removing multihash prefixes.
    * @param cid The IPFS CID string
-   * @returns The CID as a bytes32 hex string
+   * @returns The raw hash as a bytes32 hex string
    */
   private cidToBytes32(cid: string): string {
-    const cidBytes = CID.parse(cid).bytes;
+    // Extract the raw hash digest (32 bytes) without multihash prefixes
+    const cidBytes = decode(CID.parse(cid).multihash.bytes).digest;
     
-    // Convert to hex string
-    const hexString = ethers.hexlify(cidBytes);
-    
-    // If the CID bytes are exactly 32 bytes, use as-is
-    if (cidBytes.length === 32) {
-      return hexString;
+    // The raw hash digest should always be 32 bytes
+    if (cidBytes.length !== 32) {
+      throw new Error(`Unexpected hash digest length: ${cidBytes.length}, expected 32 bytes. CID: ${cid}`);
     }
     
-    // If longer than 32 bytes, take the first 32 bytes
-    if (cidBytes.length > 32) {
-      return ethers.hexlify(cidBytes.slice(0, 32));
-    }
-    
-    // If shorter than 32 bytes, pad with zeros on the right
-    const paddedBytes = new Uint8Array(32);
-    paddedBytes.set(cidBytes);
-    return ethers.hexlify(paddedBytes);
+    return ethers.hexlify(cidBytes);
   }
 
   private getFeeRecipient(comment: any): string {
@@ -324,4 +413,7 @@ export async function PlebbitTippingV1({ rpcUrls, cache }: {
   
   return new PlebbitTippingV1Instance(rpcUrls, cache, contractAddress);
 }
+
+// Export the classes for external use
+export { Comment, SenderComment };
 
