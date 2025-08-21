@@ -58,6 +58,8 @@ jobs:
         echo "✅ Environment setup complete"
         
     - name: Run tests with Hardhat node
+      env:
+        NETWORK_0: ${{ secrets.MAINNET_RPC_URL }}
       run: |
         set -e  # Exit on any error
         
