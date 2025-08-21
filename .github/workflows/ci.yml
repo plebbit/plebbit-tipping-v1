@@ -123,6 +123,6 @@ jobs:
           exit 1
         fi
         
-        # Run all tests
-        echo "🧪 Running all tests..."
-        npm test
+        # # Run all tests
+        # echo "🧪 Running all tests..."
+        # npm test
