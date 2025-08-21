@@ -9,6 +9,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    environment: development
     
     steps:
     - name: Checkout code
@@ -46,7 +47,7 @@ jobs:
           echo "💡 Please add MAINNET_RPC_URL to your GitHub repository secrets"
           exit 1
         else
-          echo "✅ NETWORK_0 is set: ${NETWORK_0:0:5}..." # Show only first 30 chars for security
+          echo "✅ NETWORK_0 is set: ${NETWORK_0:0:5}..." # Show only first 5 chars for security
         fi
         
         # Create .env file for deployment script
