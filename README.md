@@ -1,7 +1,6 @@
 # Plebbit Tipping v1
 
 [![CI](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/ci.yml/badge.svg)](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/ci.yml)
-[![Test Suite](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/test.yml/badge.svg)](https://github.com/plebbit/plebbit-tipping-v1/actions/workflows/test.yml)
 
 The Plebbit tipping system includes the smart contract and the JavaScript/TypeScript API.
 

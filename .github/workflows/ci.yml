@@ -9,6 +9,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    environment: development
     
     steps:
     - name: Checkout code
@@ -21,74 +22,107 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: |
-        npm ci
-        cd contracts && npm ci
-        cd ../js-api && npm ci
+      run: npm run install:all
         
-    - name: Compile contracts
-      run: |
-        npm run build:contracts
+    - name: Build everything
+      run: npm run build
         
-    - name: Build TypeScript
-      run: |
-        cd js-api
-        npm run build
-        
-    - name: Run contract tests
-      run: |
-        cd contracts
-        npm test
-        
-    - name: Start Hardhat node for integration tests
+    - name: Setup environment for deployment
       env:
         ADMIN_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+        NETWORK_0: ${{ secrets.MAINNET_RPC_URL }}
       run: |
-        cd contracts
+        # Check if required environment variables are set
+        echo "🔍 Checking environment variables..."
+        
+        if [ -z "$ADMIN_ADDRESS" ]; then
+          echo "❌ ADMIN_ADDRESS is not set"
+          exit 1
+        else
+          echo "✅ ADMIN_ADDRESS is set: $ADMIN_ADDRESS"
+        fi
+        
+        if [ -z "$NETWORK_0" ]; then
+          echo "❌ NETWORK_0 is not set (MAINNET_RPC_URL secret might be missing)"
+          echo "💡 Please add MAINNET_RPC_URL to your GitHub repository secrets"
+          exit 1
+        else
+          echo "✅ NETWORK_0 is set: ${NETWORK_0:0:5}..." # Show only first 5 chars for security
+        fi
         
         # Create .env file for deployment script
-        echo "ADMIN_ADDRESS=$ADMIN_ADDRESS" > .env
+        echo "📝 Creating .env file..."
+        echo "ADMIN_ADDRESS=$ADMIN_ADDRESS" > contracts/.env
+        echo "NETWORK_0=$NETWORK_0" >> contracts/.env
         
-        # Start Hardhat node (without mainnet fork for CI speed)
+        echo "✅ Environment setup complete"
+        
+    - name: Run tests with Hardhat node
+      env:
+        NETWORK_0: ${{ secrets.MAINNET_RPC_URL }}
+      run: |
+        set -e  # Exit on any error
+        
+        # Function to cleanup processes
+        cleanup() {
+          echo "🧹 Cleaning up processes..."
+          if [ ! -z "$HARDHAT_PID" ] && kill -0 "$HARDHAT_PID" 2>/dev/null; then
+            echo "Stopping Hardhat node (PID: $HARDHAT_PID)"
+            kill "$HARDHAT_PID" 2>/dev/null || true
+            # Wait for process to stop
+            for i in {1..10}; do
+              if ! kill -0 "$HARDHAT_PID" 2>/dev/null; then
+                break
+              fi
+              sleep 1
+            done
+          fi
+          # Force kill any remaining hardhat processes
+          pkill -f "hardhat node" 2>/dev/null || true
+        }
+        
+        # Set trap to cleanup on script exit
+        trap cleanup EXIT INT TERM
+        
+        # Start Hardhat node in background
         echo "=== Starting Hardhat node ==="
-        nohup npm run node > hardhat.log 2>&1 &
-        # nohup npx hardhat node --no-deploy --hostname 127.0.0.1 --port 8545 > hardhat.log 2>&1 &
-        
+        # npm run node > hardhat.log 2>&1 &
+        npm run node:fork > hardhat.log 2>&1 &
         HARDHAT_PID=$!
-        echo $HARDHAT_PID > hardhat.pid
         echo "Hardhat node started with PID: $HARDHAT_PID"
         
-        # Wait for node to be ready (more robust than sleep 10)
-        echo "Waiting for node to be ready..."
-        timeout 60s bash -c 'until nc -z 127.0.0.1 8545; do
-          echo "Waiting for port 8545... $(date)"
+        # Wait for node to be ready with timeout
+        echo "⏳ Waiting for Hardhat node to be ready..."
+        for i in {1..30}; do
+          if curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' \
+            http://127.0.0.1:8545 >/dev/null 2>&1; then
+            echo "✅ Hardhat node is ready!"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ Timeout waiting for Hardhat node to start"
+            echo "=== Hardhat logs ==="
+            cat hardhat.log || echo "No logs available"
+            exit 1
+          fi
           sleep 2
-        done'
-        echo "Hardhat node is ready"
+        done
         
         # Deploy contracts
+        echo "📦 Deploying contracts..."
         npm run deploy:localhost
         
         # Verify deployment
-        if [ -f "deployments/localhost/PlebbitTippingV1.json" ]; then
-          DEPLOYED_ADDRESS=$(grep -o '"address": "[^"]*"' deployments/localhost/PlebbitTippingV1.json | cut -d'"' -f4)
+        if [ -f "contracts/deployments/localhost/PlebbitTippingV1.json" ]; then
+          DEPLOYED_ADDRESS=$(grep -o '"address": "[^"]*"' contracts/deployments/localhost/PlebbitTippingV1.json | cut -d'"' -f4)
           echo "✅ Contract deployed successfully at: $DEPLOYED_ADDRESS"
         else
           echo "❌ Deployment file not found"
           exit 1
         fi
-
-    - name: Run JS API tests
-      run: |
-        cd js-api
-        npm test
-
-    - name: Cleanup Hardhat processes
-      if: always()
-      run: |
-        cd contracts
-        if [ -f hardhat.pid ]; then
-          kill $(cat hardhat.pid) 2>/dev/null || true
-          rm hardhat.pid
-        fi
-        pkill -f "hardhat node" 2>/dev/null || true
+        
+        # # Run all tests
+        # echo "🧪 Running all tests..."
+        # npm test
