@@ -60,7 +60,8 @@ jobs:
         
         # Start Hardhat node in background
         echo "=== Starting Hardhat node ==="
-        npm run node > hardhat.log 2>&1 &
+        # npm run node > hardhat.log 2>&1 &
+        npm run node:fork > hardhat.log 2>&1 &
         HARDHAT_PID=$!
         echo "Hardhat node started with PID: $HARDHAT_PID"
         
