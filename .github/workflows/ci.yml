@@ -22,7 +22,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm run install:all
+      run: npm install
         
     - name: Build everything
       run: npm run build
