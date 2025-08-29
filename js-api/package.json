@@ -14,7 +14,8 @@
   },
   "scripts": {
     "prebuild": "cp ../contracts/artifacts/contracts/PlebbitTippingV1.sol/PlebbitTippingV1.json src/",
-    "build": "tsc && cp src/PlebbitTippingV1.json dist/",
+    "build": "tsc",
+    "postbuild": "cp src/PlebbitTippingV1.json dist/",
     "test": "npm run test:unit",
     "test:unit": "node --experimental-vm-modules ../node_modules/.bin/jest test/unit/",
     "test:integration": "node test/integration/mainnet-fork.test.js",

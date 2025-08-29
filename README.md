@@ -36,7 +36,7 @@ The Plebbit tipping system includes the smart contract and the JavaScript/TypeSc
 
 2. Install dependencies for both contracts and js-api:
    ```bash
-   npm run install:all
+   npm install
    ```
 
 3. Build everything (contracts + js-api):
