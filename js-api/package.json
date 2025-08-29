@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "prebuild": "&& mkdir -p dist && cp ../contracts/artifacts/contracts/PlebbitTippingV1.sol/PlebbitTippingV1.json src/ dist/",
+    "prebuild": "mkdir -p dist && cp ../contracts/artifacts/contracts/PlebbitTippingV1.sol/PlebbitTippingV1.json src/ && cp ../contracts/artifacts/contracts/PlebbitTippingV1.sol/PlebbitTippingV1.json dist/",
     "build": "tsc && cp src/PlebbitTippingV1.json dist/",
     "test": "npm run test:unit",
     "test:unit": "node --experimental-vm-modules ../node_modules/.bin/jest test/unit/",
@@ -82,7 +82,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^9.0.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0"
