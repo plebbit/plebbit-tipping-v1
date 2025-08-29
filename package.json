@@ -27,8 +27,7 @@
     "install:all": "cd contracts && npm install && cd ../js-api && npm install",
     "clean": "rm -rf contracts/node_modules js-api/node_modules contracts/dist js-api/dist contracts/artifacts contracts/cache",
     "publish:js-api": "cd js-api && npm publish --access public",
-    "prepare": "npm run install:all && npm run build:js-api",
-    "postinstall": "npm run prepare"
+    "prepare": "cd js-api && npm install && npm run build"
   },
   "keywords": ["plebbit", "tipping", "ethereum", "blockchain", "solidity", "typescript"],
   "author": "",
