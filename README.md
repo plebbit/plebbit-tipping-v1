@@ -4,16 +4,6 @@
 
 The Plebbit tipping system includes the smart contract and the JavaScript/TypeScript API.
 
-## Project Structure
-
-```
-plebbit-tipping-v1/
-├── contracts/         # Smart contracts (Solidity + Hardhat)
-├── js-api/            # JavaScript/TypeScript API
-├── package.json       # Root build scripts
-└── README.md          # This file
-```
-
 ## Deployed Contracts
 
 | Network      | Contract Address                                                                 |

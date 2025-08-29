@@ -24,10 +24,9 @@
     "verify:sepolia": "cd contracts && npm run verify:sepolia",
     "verify:amoy": "cd contracts && npm run verify:amoy",
     "verify:baseSepolia": "cd contracts && npm run verify:baseSepolia",
-    "install:all": "cd contracts && npm install && cd ../js-api && npm install",
+    "install": "cd contracts && npm install && cd ../js-api && npm install",
     "clean": "rm -rf contracts/node_modules js-api/node_modules contracts/dist js-api/dist contracts/artifacts contracts/cache",
     "publish:js-api": "cd js-api && npm publish --access public",
-    "postinstall": "cd js-api && npm run prebuild && npm run build || true"
   },
   "keywords": ["plebbit", "tipping", "ethereum", "blockchain", "solidity", "typescript"],
   "author": "",
