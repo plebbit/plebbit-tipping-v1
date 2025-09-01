@@ -198,7 +198,7 @@ interface SenderCommentOptions {
 ### Detailed Method Documentation
 
 #### `createTip(options)`
-Creates a new tip transaction. The tip amount is automatically set to 2x the contract's minimum tip amount to ensure the transaction succeeds.
+Creates a new tip transaction. The tip amount is automatically set to the contract's minimum tip amount if no custom amount is provided.
 
 **Requirements:**
 - Requires `privateKey` to be set during initialization

@@ -118,12 +118,13 @@ class PlebbitTippingV1Instance {
     this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, this.provider);
   }
 
-  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender, privateKey }: { 
+  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender, privateKey, tipAmount }: { 
     feeRecipients: string[], 
     recipientCommentCid: string, 
     senderCommentCid?: string, 
     sender?: string,
-    privateKey: string
+    privateKey: string,
+    tipAmount?: bigint
   }): Promise<TipTransaction> {
     // Prepare wallet and contract, but don't call the contract yet
     const wallet = new ethers.Wallet(privateKey, this.provider);
@@ -141,18 +142,31 @@ class PlebbitTippingV1Instance {
       
       async send(): Promise<TransactionResult> {
         try {
-          // Get minimum tip amount from contract and use a higher amount
-          const minTipAmount = await contractWithSigner.minimumTipAmount();
-          const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
+          // Determine tip amount: use custom amount if provided, otherwise use minimum
+          let actualTipAmount: bigint;
+          if (tipAmount && tipAmount > 0n) {
+            // Validate that custom amount meets minimum requirement
+            const minTipAmount = await contractWithSigner.minimumTipAmount();
+            if (tipAmount < minTipAmount) {
+              throw new Error(`Custom tip amount (${ethers.formatEther(tipAmount)} ETH) is below minimum required (${ethers.formatEther(minTipAmount)} ETH)`);
+            }
+            actualTipAmount = tipAmount;
+            console.log('Using custom tip amount:', ethers.formatEther(actualTipAmount), 'ETH');
+          } else {
+            // Use minimum as default
+            const minTipAmount = await contractWithSigner.minimumTipAmount();
+            actualTipAmount = minTipAmount;
+            console.log('Using default tip amount (minimum):', ethers.formatEther(actualTipAmount), 'ETH');
+          }
           
           // Actually call the contract method now
           const tipTx = await contractWithSigner.tip(
             sender || wallet.address, // Use wallet address if sender not provided
-            tipAmount,
+            actualTipAmount,
             feeRecipients[0],
             senderCidBytes,
             recipientCidBytes,
-            { from: sender || wallet.address, value: tipAmount } // Add value to the transaction
+            { from: sender || wallet.address, value: actualTipAmount } // Add value to the transaction
           );
           
           // Set transactionHash immediately after transaction is submitted
@@ -362,6 +376,176 @@ class PlebbitTippingV1Instance {
 
   async getMinimumTipAmount() {
     return await this.contract.minimumTipAmount();
+  }
+
+  /**
+   * Helper method to get logs in chunks to avoid RPC block range limitations
+   */
+  private async getLogsInChunks(
+    address: string,
+    topics: (string | null)[],
+    fromBlock: number,
+    toBlock: number | string,
+    chunkSize: number = 500 // Conservative chunk size
+  ) {
+    const allLogs = [];
+    const endBlock = toBlock === 'latest' ? await this.provider.getBlockNumber() : Number(toBlock);
+    
+    // Process in chunks
+    for (let start = fromBlock; start <= endBlock; start += chunkSize) {
+      const end = Math.min(start + chunkSize - 1, endBlock);
+      
+      try {
+        const logs = await this.provider.getLogs({
+          address,
+          topics,
+          fromBlock: start,
+          toBlock: end
+        });
+        allLogs.push(...logs);
+      } catch (error) {
+        console.warn(`Failed to get logs for block range ${start}-${end}:`, error);
+        // Continue with other chunks even if one fails
+      }
+    }
+    
+    return allLogs;
+  }
+
+  /**
+   * Get tipping activity for a wallet address (both sent and received tips)
+   * @param walletAddress The wallet address to get activity for
+   * @param options Optional parameters for filtering
+   * @returns Array of tip activities with transaction details
+   */
+  async getTipsActivity(walletAddress: string, options: {
+    fromBlock?: number | string;
+    toBlock?: number | string;
+    limit?: number;
+    chunkSize?: number;
+  } = {}): Promise<Array<{
+    type: 'sent' | 'received';
+    transactionHash: string;
+    blockNumber: number;
+    timestamp: number;
+    sender: string;
+    recipient: string;
+    amount: bigint;
+    feeRecipient: string;
+    recipientCommentCid: string;
+    senderCommentCid: string;
+  }>> {
+    try {
+      // Default options - use smaller range to avoid RPC limits
+      const currentBlock = await this.provider.getBlockNumber();
+      const fromBlock = typeof options.fromBlock === 'string' ? 
+        parseInt(options.fromBlock, 16) : 
+        (options.fromBlock || Math.max(0, currentBlock - 2000)); // Reduced to 2k blocks
+      const toBlock = options.toBlock || 'latest';
+      const limit = options.limit || 100;
+      const chunkSize = options.chunkSize || 500; // Conservative chunk size
+
+      console.log(`Fetching tips activity for ${walletAddress} from block ${fromBlock} to ${toBlock}`);
+
+      // Get tip event signature
+      const tipEventTopic = ethers.id("Tip(address,address,uint256,address,bytes32,bytes32)");
+      
+      // Get logs in chunks to avoid RPC limits
+      const sentLogsPromise = this.getLogsInChunks(
+        this.contractAddress,
+        [
+          tipEventTopic,
+          ethers.zeroPadValue(walletAddress, 32) // sender is indexed (topic[1])
+        ],
+        fromBlock,
+        toBlock,
+        chunkSize
+      );
+
+      const receivedLogsPromise = this.getLogsInChunks(
+        this.contractAddress,
+        [
+          tipEventTopic,
+          null, // sender can be anyone
+          ethers.zeroPadValue(walletAddress, 32) // recipient is indexed (topic[2])
+        ],
+        fromBlock,
+        toBlock,
+        chunkSize
+      );
+
+      const [sentLogs, receivedLogs] = await Promise.all([sentLogsPromise, receivedLogsPromise]);
+
+      console.log(`Found ${sentLogs.length} sent tips and ${receivedLogs.length} received tips for ${walletAddress}`);
+
+      const allTips = [];
+
+      // Process sent tips
+      for (const log of sentLogs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+          if (!parsed) continue;
+
+          const block = await this.provider.getBlock(log.blockNumber);
+          const timestamp = block ? block.timestamp * 1000 : Date.now();
+
+          allTips.push({
+            type: 'sent' as const,
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            timestamp,
+            sender: parsed.args.sender,
+            recipient: parsed.args.recipient,
+            amount: parsed.args.amount,
+            feeRecipient: parsed.args.feeRecipient,
+            recipientCommentCid: parsed.args.recipientCommentCid,
+            senderCommentCid: parsed.args.senderCommentCid,
+          });
+        } catch (parseError) {
+          console.error('Failed to parse sent tip log:', parseError);
+        }
+      }
+
+      // Process received tips
+      for (const log of receivedLogs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+          if (!parsed) continue;
+
+          const block = await this.provider.getBlock(log.blockNumber);
+          const timestamp = block ? block.timestamp * 1000 : Date.now();
+
+          allTips.push({
+            type: 'received' as const,
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            timestamp,
+            sender: parsed.args.sender,
+            recipient: parsed.args.recipient,
+            amount: parsed.args.amount,
+            feeRecipient: parsed.args.feeRecipient,
+            recipientCommentCid: parsed.args.recipientCommentCid,
+            senderCommentCid: parsed.args.senderCommentCid,
+          });
+        } catch (parseError) {
+          console.error('Failed to parse received tip log:', parseError);
+        }
+      }
+
+      // Remove duplicates and sort by timestamp (newest first)
+      const uniqueTips = allTips
+        .filter((tip, index, self) => 
+          index === self.findIndex((t) => t.transactionHash === tip.transactionHash)
+        )
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, limit);
+
+      console.log(`Returning ${uniqueTips.length} unique tips`);
+      return uniqueTips;
+    } catch (error) {
+      console.error('Failed to fetch tips activity:', error);
+      throw error;
+    }
   }
 
   /**
