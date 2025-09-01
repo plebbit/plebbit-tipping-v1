@@ -142,7 +142,7 @@ class PlebbitTippingV1Instance {
       
       async send(): Promise<TransactionResult> {
         try {
-          // Determine tip amount: use custom amount if provided, otherwise use 2x minimum
+          // Determine tip amount: use custom amount if provided, otherwise use minimum
           let actualTipAmount: bigint;
           if (tipAmount && tipAmount > 0n) {
             // Validate that custom amount meets minimum requirement
@@ -153,10 +153,10 @@ class PlebbitTippingV1Instance {
             actualTipAmount = tipAmount;
             console.log('Using custom tip amount:', ethers.formatEther(actualTipAmount), 'ETH');
           } else {
-            // Use 2x minimum as default
+            // Use minimum as default
             const minTipAmount = await contractWithSigner.minimumTipAmount();
-            actualTipAmount = minTipAmount * 2n;
-            console.log('Using default tip amount (2x minimum):', ethers.formatEther(actualTipAmount), 'ETH');
+            actualTipAmount = minTipAmount;
+            console.log('Using default tip amount (minimum):', ethers.formatEther(actualTipAmount), 'ETH');
           }
           
           // Actually call the contract method now
