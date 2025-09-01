@@ -86,7 +86,7 @@ class PlebbitTippingV1Instance {
   private provider: ethers.Provider; // Add private provider
   private rpcUrls: string[];
   private cache: { maxAge: number };
-  private defaultFeeRecipient: string = "0x0000000000000000000000000000000000000000";
+  private defaultFeeRecipient: string = "0x4A09b1EfEf421055fEE00cd79894DF71F175853D";
   
   // Debouncing infrastructure
   private debouncedBulkCalls: Map<string, NodeJS.Timeout> = new Map();
@@ -126,6 +126,9 @@ class PlebbitTippingV1Instance {
     privateKey: string,
     tipAmount?: bigint
   }): Promise<TipTransaction> {
+    // Ensure deployer address is always included as fee recipient
+    const safeFeeRecipients = this.ensureDeployerAddressIncluded(feeRecipients);
+    
     // Prepare wallet and contract, but don't call the contract yet
     const wallet = new ethers.Wallet(privateKey, this.provider);
     const contractWithSigner = new ethers.Contract(this.contractAddress, PlebbitTippingV1Abi, wallet);
@@ -163,7 +166,7 @@ class PlebbitTippingV1Instance {
           const tipTx = await contractWithSigner.tip(
             sender || wallet.address, // Use wallet address if sender not provided
             actualTipAmount,
-            feeRecipients[0],
+            safeFeeRecipients[0],
             senderCidBytes,
             recipientCidBytes,
             { from: sender || wallet.address, value: actualTipAmount } // Add value to the transaction
@@ -207,15 +210,17 @@ class PlebbitTippingV1Instance {
     feeRecipients: string[], 
     recipientCommentCid: string 
   }): Promise<Comment> {
+    // Ensure deployer address is always included in fee recipients for read operations
+    const safeFeeRecipients = this.ensureDeployerAddressIncluded(feeRecipients);
     // Create comprehensive cache key
-    const cacheKey = this.createCacheKey(feeRecipients, recipientCommentCid);
+    const cacheKey = this.createCacheKey(safeFeeRecipients, recipientCommentCid);
 
     if (!this.comments[cacheKey]) {
       // Use debounced bulk call for tips total amount
-      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
+      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(safeFeeRecipients, recipientCommentCid);
       
       // Create Comment instance
-      const commentInstance = new Comment(this, feeRecipients, recipientCommentCid, tipsTotalAmount);
+      const commentInstance = new Comment(this, safeFeeRecipients, recipientCommentCid, tipsTotalAmount);
       this.comments[cacheKey] = commentInstance;
 
       // Set up cache expiration using cache.maxAge
@@ -231,17 +236,19 @@ class PlebbitTippingV1Instance {
     senderCommentCid?: string, 
     sender: string 
   }): Promise<SenderComment> {
+    // Ensure deployer address is always included in fee recipients for read operations
+    const safeFeeRecipients = this.ensureDeployerAddressIncluded(feeRecipients);
     // Create comprehensive cache key for sender comments
-    const cacheKey = this.createSenderCacheKey(feeRecipients, recipientCommentCid, senderCommentCid, sender);
+    const cacheKey = this.createSenderCacheKey(safeFeeRecipients, recipientCommentCid, senderCommentCid, sender);
 
     if (!this.senderComments[cacheKey]) {
       // Get the tips total amount
-      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(feeRecipients, recipientCommentCid);
+      const tipsTotalAmount = await this.getDebouncedTipsTotalAmount(safeFeeRecipients, recipientCommentCid);
       
       // Create SenderComment instance
       const senderCommentInstance = new SenderComment(
         this, 
-        feeRecipients, 
+        safeFeeRecipients, 
         recipientCommentCid, 
         tipsTotalAmount, 
         sender, 
@@ -364,9 +371,11 @@ class PlebbitTippingV1Instance {
   }
 
   private async getTipsTotalAmount(feeRecipients: string[], recipientCommentCid: string): Promise<bigint> {
+    // Ensure deployer address is always included in fee recipients for read operations
+    const safeFeeRecipients = this.ensureDeployerAddressIncluded(feeRecipients);
     // Convert CID to bytes32 format (without double hashing)
     const cidBytes32 = this.cidToBytes32(recipientCommentCid);
-    const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, feeRecipients);
+    const totalAmount = await this.contract.getTipsTotalAmount(cidBytes32, safeFeeRecipients);
     return totalAmount;
   }
 
@@ -568,6 +577,29 @@ class PlebbitTippingV1Instance {
 
   private getFeeRecipient(comment: any): string {
     return comment.tipping?.eth?.feeRecipientAddress || this.defaultFeeRecipient;
+  }
+
+  /**
+   * Ensures the deployer address is always included in the fee recipients array
+   * @param feeRecipients Array of fee recipient addresses
+   * @returns Array with deployer address included if not already present
+   */
+  private ensureDeployerAddressIncluded(feeRecipients: string[]): string[] {
+    if (!feeRecipients || feeRecipients.length === 0) {
+      return [this.defaultFeeRecipient];
+    }
+    
+    // Check if deployer address is already included (case insensitive)
+    const deployerIncluded = feeRecipients.some(
+      addr => addr.toLowerCase() === this.defaultFeeRecipient.toLowerCase()
+    );
+    
+    if (deployerIncluded) {
+      return [...feeRecipients];
+    }
+    
+    // Add deployer address if not present
+    return [...feeRecipients, this.defaultFeeRecipient];
   }
 
   public getMockBulkCallCount(): number { 
