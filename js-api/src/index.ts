@@ -1,2 +1,2 @@
-export { PlebbitTippingV1 } from "./plebbitTippingV1";
-export * from "./types";
+export { PlebbitTippingV1 } from "./plebbitTippingV1.js";
+export * from "./types.js";

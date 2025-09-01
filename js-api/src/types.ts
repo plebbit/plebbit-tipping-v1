@@ -3,7 +3,7 @@ export interface TipOptions {
   recipientCommentCid: string;
   senderCommentCid?: string;
   sender?: string;
-  customAmount?: bigint; // Custom tip amount in wei, if not provided uses 2x minimum
+  tipAmount?: bigint; // Custom tip amount in wei, if not provided uses 2x minimum
 }
 
 export interface PlebbitTippingV1Options {
