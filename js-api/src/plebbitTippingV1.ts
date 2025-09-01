@@ -118,12 +118,13 @@ class PlebbitTippingV1Instance {
     this.contract = new ethers.Contract(contractAddress, PlebbitTippingV1Abi, this.provider);
   }
 
-  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender, privateKey }: { 
+  async createTip({ feeRecipients, recipientCommentCid, senderCommentCid, sender, privateKey, customAmount }: { 
     feeRecipients: string[], 
     recipientCommentCid: string, 
     senderCommentCid?: string, 
     sender?: string,
-    privateKey: string
+    privateKey: string,
+    customAmount?: bigint
   }): Promise<TipTransaction> {
     // Prepare wallet and contract, but don't call the contract yet
     const wallet = new ethers.Wallet(privateKey, this.provider);
@@ -141,9 +142,22 @@ class PlebbitTippingV1Instance {
       
       async send(): Promise<TransactionResult> {
         try {
-          // Get minimum tip amount from contract and use a higher amount
-          const minTipAmount = await contractWithSigner.minimumTipAmount();
-          const tipAmount = minTipAmount * 2n; // Use 2x minimum to ensure it's above threshold
+          // Determine tip amount: use custom amount if provided, otherwise use 2x minimum
+          let tipAmount: bigint;
+          if (customAmount && customAmount > 0n) {
+            // Validate that custom amount meets minimum requirement
+            const minTipAmount = await contractWithSigner.minimumTipAmount();
+            if (customAmount < minTipAmount) {
+              throw new Error(`Custom tip amount (${ethers.formatEther(customAmount)} ETH) is below minimum required (${ethers.formatEther(minTipAmount)} ETH)`);
+            }
+            tipAmount = customAmount;
+            console.log('Using custom tip amount:', ethers.formatEther(tipAmount), 'ETH');
+          } else {
+            // Use 2x minimum as default
+            const minTipAmount = await contractWithSigner.minimumTipAmount();
+            tipAmount = minTipAmount * 2n;
+            console.log('Using default tip amount (2x minimum):', ethers.formatEther(tipAmount), 'ETH');
+          }
           
           // Actually call the contract method now
           const tipTx = await contractWithSigner.tip(
